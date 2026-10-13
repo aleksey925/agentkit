@@ -1,0 +1,11 @@
+{
+  "name": "agent-brainpack",
+  "plugins": [
+    {
+      "name": "core",
+      "source": { "source": "local", "path": "./plugins/common" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}

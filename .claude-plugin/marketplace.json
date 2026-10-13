@@ -1,0 +1,11 @@
+{
+  "name": "agent-brainpack",
+  "owner": { "name": "Aleksei Petrunnik" },
+  "plugins": [
+    {
+      "name": "core",
+      "source": "./plugins/common",
+      "description": "Agent skills"
+    }
+  ]
+}
