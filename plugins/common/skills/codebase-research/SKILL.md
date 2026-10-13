@@ -1,9 +1,9 @@
 ---
 name: codebase-research
 description: >
-  Research questions about a codebase by tracing the relevant implementation
-  and explaining the main finding with concise evidence. Use when a user asks
-  how a feature works, where behavior is implemented, or what the code means.
+  Manual-only codebase research workflow. Use only when the user explicitly
+  invokes /codebase-research or $codebase-research, or asks to run this skill
+  by name. Do not use for ordinary questions about code — answer those directly.
 ---
 
 # Research a codebase and explain the finding
