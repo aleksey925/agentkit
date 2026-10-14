@@ -1,5 +1,5 @@
 {
-  "name": "agent-brainpack",
+  "name": "agentkit",
   "owner": { "name": "Aleksei Petrunnik" },
   "plugins": [
     {

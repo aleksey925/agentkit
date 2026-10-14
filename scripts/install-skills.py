@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Install agent-brainpack skills into Claude Code and Codex without plugins.
+Install agentkit skills into Claude Code and Codex without plugins.
 
 Which skills go to which agent is taken from the repo's own manifests,
 so the plugin setup and this script never disagree:
@@ -421,7 +421,7 @@ def report_conflicts():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Install agent-brainpack skills into Claude Code and Codex.")
+        description="Install agentkit skills into Claude Code and Codex.")
     parser.add_argument("--agent", choices=sorted(AGENTS), action="append",
                         help="agent to install for (repeatable, default: all)")
     parser.add_argument("--copy", action="store_true",
