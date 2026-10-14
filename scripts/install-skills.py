@@ -37,7 +37,7 @@ Usage:
   python3 install_skills.py --force          # also replace conflicting skills
   python3 install_skills.py --home /home/box # install into another home dir
 
-Exit code is 1 if any skill was skipped because of a conflict.
+Exit code is 1 if any skill was skipped because of a conflict or failed.
 """
 
 import argparse
@@ -75,6 +75,7 @@ AGENTS = {
 }
 
 conflicts = []  # (agent, name, installed_path, repo_path_or_None, reason)
+errors = []     # (agent, name, message)
 
 
 def warn(msg):
@@ -109,6 +110,9 @@ def plugin_dirs_for(agent):
     plugin_root = (data.get("metadata") or {}).get("pluginRoot")
     dirs = []
     for entry in data.get("plugins", []):
+        if not isinstance(entry, dict):
+            warn(f"{agent}: malformed plugin entry {entry!r}, skipped")
+            continue
         name = entry.get("name", "?")
         source = entry.get("source")
         if isinstance(source, dict):
@@ -127,6 +131,9 @@ def plugin_dirs_for(agent):
         if not plugin_dir.is_dir():
             warn(f"{agent}: plugin '{name}' points to missing folder {path}, skipped")
             continue
+        if not is_inside_repo(plugin_dir):
+            warn(f"{agent}: plugin '{name}' is outside the repo ({path}), skipped")
+            continue
         dirs.append(plugin_dir)
     return dirs
 
@@ -139,7 +146,10 @@ def skills_for(agent):
         if not skills_dir.is_dir():
             continue
         for skill_dir in sorted(skills_dir.iterdir()):
+            if not skill_dir.is_dir() or skill_dir.name.startswith("."):
+                continue
             if not (skill_dir / "SKILL.md").is_file():
+                warn(f"{agent}: {skill_dir.relative_to(REPO)} has no SKILL.md, skipped")
                 continue
             name = skill_dir.name
             if name in skills:
@@ -220,9 +230,9 @@ def check_existing(dst, src, args):
             if os.readlink(dst) == link_target(src, dst, args.relative):
                 return "up-to-date", ""
             if os.path.isabs(os.readlink(dst)) != os.path.isabs(link_target(src, dst, args.relative)):
-                return "update", "absolute → relative link" if args.relative else "relative → absolute link"
+                return "update", "absolute -> relative link" if args.relative else "relative -> absolute link"
             return "update", "link pointed to an old location"
-        return "update", "link → copy"  # content lives in the repo, nothing to lose
+        return "update", "link -> copy"  # content lives in the repo, nothing to lose
 
     if not dst.is_dir():
         return "conflict", "a file with this name is in the way"
@@ -235,10 +245,10 @@ def check_existing(dst, src, args):
             if read_marker(dst).get("hash") == current:
                 return "up-to-date", ""
             return "update", "copy was identical, hash record refreshed"
-        return "update", "copy → link"
+        return "update", "copy -> link"
     if is_managed(dst):
         if unchanged_since_install(dst):
-            return "update", "repo changed" if args.copy else "repo changed, copy → link"
+            return "update", "repo changed" if args.copy else "repo changed, copy -> link"
         return "conflict", "installed copy was edited after installation"
     return "conflict", "a different skill with the same name already exists"
 
@@ -314,6 +324,7 @@ def prune(agent, target, keep, args, counts):
     for entry in sorted(target.iterdir()):
         if entry.name in keep or entry.name.endswith(".brainpack-tmp") or not is_managed(entry):
             continue
+        note = why
         if not entry.is_symlink() and not unchanged_since_install(entry):
             reason = f"{why}, but the installed copy was edited"
             if not args.force:
@@ -321,15 +332,28 @@ def prune(agent, target, keep, args, counts):
                 counts["skipped"] = counts.get("skipped", 0) + 1
                 print(f"  {entry.name:<30} SKIPPED: {reason}")
                 continue
-            why = f"{why} (--force, copy was edited)"
-        if not args.dry_run:
-            remove(entry)
+            note = f"{why} (--force, copy was edited)"
+        try:
+            if not args.dry_run:
+                remove(entry)
+        except OSError as e:
+            errors.append((agent, entry.name, str(e)))
+            counts["failed"] = counts.get("failed", 0) + 1
+            print(f"  {entry.name:<30} ERROR: {e}")
+            continue
         counts["removed"] = counts.get("removed", 0) + 1
-        print(f"  {entry.name:<30} {say(args, 'removed', 'will remove')}: {why}")
+        print(f"  {entry.name:<30} {say(args, 'removed', 'will remove')}: {note}")
 
 
 def sync_agent(agent, args, counts):
     target = Path(args.home).expanduser() / AGENTS[agent]["target"]
+    if is_inside_repo(target):
+        print(f"\n[{agent}] {target}")
+        print(f"  ERROR: this folder resolves into the repo ({target.resolve()}).")
+        print("  Probably the whole skills folder is a symlink to the repo. Remove that symlink")
+        print("  first, otherwise installing would overwrite the repo itself. Agent skipped.")
+        errors.append((agent, "*", f"target folder resolves into the repo: {target.resolve()}"))
+        return
     skills = {} if args.uninstall else skills_for(agent)
     if args.list or args.uninstall:
         how = ""
@@ -350,7 +374,11 @@ def sync_agent(agent, args, counts):
         target.mkdir(parents=True, exist_ok=True)
 
     for name, src in skills.items():
-        key, status = install_skill(agent, name, src, target / name, args)
+        try:
+            key, status = install_skill(agent, name, src, target / name, args)
+        except OSError as e:
+            errors.append((agent, name, str(e)))
+            key, status = "failed", f"ERROR: {e}"
         counts[key] = counts.get(key, 0) + 1
         print(f"  {name:<30} {status}")
 
@@ -358,13 +386,22 @@ def sync_agent(agent, args, counts):
 
 
 def report_summary(counts, args):
-    order = ["installed", "updated", "up to date", "overwritten", "removed", "skipped"]
+    order = ["installed", "updated", "up to date", "overwritten", "removed", "skipped", "failed"]
     parts = [f"{counts[k]} {k}" for k in order if counts.get(k)]
     if parts:
         prefix = "Plan: " if args.dry_run else "Done: "
         print(prefix + ", ".join(parts))
     if args.dry_run:
         print("DRY RUN: nothing was changed.")
+
+
+def report_errors():
+    if not errors:
+        return
+    print("\n" + "=" * 70)
+    print(f"{len(errors)} error(s):\n")
+    for agent, name, message in errors:
+        print(f"[{agent}] {name}: {message}")
 
 
 def report_conflicts():
@@ -412,7 +449,8 @@ def main():
     if not args.list:
         report_summary(counts, args)
     report_conflicts()
-    sys.exit(1 if conflicts else 0)
+    report_errors()
+    sys.exit(1 if conflicts or errors else 0)
 
 
 if __name__ == "__main__":
