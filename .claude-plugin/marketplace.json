@@ -6,6 +6,11 @@
       "name": "core",
       "source": "./plugins/common",
       "description": "Agent skills"
+    },
+    {
+      "name": "claude-only",
+      "source": "./plugins/claude",
+      "description": "Agent skills"
     }
   ]
 }
