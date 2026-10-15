@@ -1,13 +1,13 @@
 ---
 name: ask-codex
-description: Consult OpenAI Codex (GPT-5) for investigation, debugging, or code review as a second opinion. Use when the user explicitly asks to "ask codex", "check with codex", "codex review", "what does codex think", or "consult codex". Codex is slow (2-5 min) and runs read-only with full project access - it analyzes, we implement.
+description: Consult OpenAI Codex for investigation, debugging, or code review as a second opinion. Use when the user explicitly asks to "ask codex", "check with codex", "codex review", "what does codex think", or "consult codex". Codex is slow (2-5 min) and runs read-only with full project access - it analyzes, we implement.
 argument-hint: "<question or review request>"
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
 # Ask Codex
 
-Consult OpenAI Codex (GPT-5) as a second opinion for investigation,
+Consult OpenAI Codex as a second opinion for investigation,
 debugging, or review tasks. A different model has different blind spots, so
 codex catches what this session misses. It reads the project itself and
 returns analysis only - it never edits.
@@ -167,9 +167,9 @@ The script handles every codex nuance: it skips cleanly if `codex` is not
 installed, probes whether the sandbox can start and picks the right mode, and
 redirects stdin from `/dev/null` so a background launch never hangs on
 `codex exec` reading stdin. Overrides: `CODEX_SANDBOX` forces a sandbox mode,
-`CODEX_MODEL` picks the model, `CODEX_EFFORT` sets reasoning effort (default
-`high`), `CODEX_NO_OVERRIDES=1` drops the `-c` flags for proxies that reject
-them.
+`CODEX_MODEL` picks the model (default `gpt-6.1-sol`), `CODEX_EFFORT` sets
+reasoning effort (default `medium`), `CODEX_NO_OVERRIDES=1` drops the `-c`
+flags for proxies that reject them.
 
 ### Step 4: Present Results
 
