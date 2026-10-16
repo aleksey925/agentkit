@@ -1,6 +1,6 @@
 ---
 name: mkskill
-description: "Helps create or edit existing skills interactively"
+description: "Outdated skill. Will be updated later. Do not use it now. Helps create or edit existing skills interactively"
 allowed-tools: Read, Glob, Grep, Bash, Write, Edit, AskUserQuestion
 ---
 
