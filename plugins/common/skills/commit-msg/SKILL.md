@@ -18,22 +18,33 @@ Generate a concise Git commit message in English for current changes.
 
 **Important:** When analyzing a branch with multiple commits, generate a SINGLE unified commit message that summarizes ALL changes (squash commit style). Do not list individual commits.
 
+**Before calling something new**, check whether it already exists on
+master. If it does, describe what changed in it, not `add ...`.
+
 ## Requirements
 
 1. Identify the HIGH-LEVEL GOAL of the changes, not implementation details
 2. Write the ENTIRE commit message in lowercase (title and body) - the only
    exceptions are tokens that are case-sensitive by nature, such as code
    identifiers, file paths, env vars
-3. Write the commit message following this format:
+3. Drop articles (a, an, the), headline style: `fix login timeout`, not
+   `fix the login timeout`. Keep one only where the text gets unclear
+   without it
+4. Write the commit message following this format:
 
 **Title:**
+
 - Use imperative mood (add, fix, update, refactor, remove, etc.)
 - Write entirely in lowercase
 - Describe the PURPOSE/GOAL, not implementation mechanics
 - Do NOT include implementation details (e.g., "add custom context" is a detail, "improve type safety" is a goal)
+- For a branch with many changes, find the theme they share (a redesign, a
+  migration, a new feature) and name it the way a user would. Do not put one
+  of several features in the title
 - Keep it at most 72 characters
 
 **Body (bullet points):**
+
 - Add bullet points ONLY if there are additional changes besides the main feature
 - Use HIGH-LEVEL descriptions that group related changes by purpose:
   - All dependency/version updates → `update deps`
@@ -42,12 +53,27 @@ Generate a concise Git commit message in English for current changes.
 - Maximum 2-4 bullet points (group aggressively!)
 - Write each bullet point entirely in lowercase
 - Focus on WHY, not WHAT (e.g., "fix all mypy issues" instead of "add type annotations to 5 functions")
+- Write the result, not the method: `optimize release binary size`, not
+  `embed assets gzip-compressed and ship fonts as woff2 only`
+- Each bullet must be clear on its own: name the part of the product it
+  touches (static site, editor, API), do not rely on the bullets around it
+- Do not use words from the code or the project docs that a user never sees
+- Start a new feature with `add`: `add note export to pdf`, not
+  `export note to pdf`, which reads like a one-time action
 
 **Example format:**
 refactor bot and improve type safety
 
 - fix all mypy issues
 - update deps
+
+**Example for a branch with many features:**
+redesign app and improve its user experience
+
+- make static site look and work like main app
+- open notes on static site without page reload
+- add note export to markdown, html or pdf
+- optimize release binary size
 
 **For simple changes without additional modifications:**
 fix authentication timeout issue
