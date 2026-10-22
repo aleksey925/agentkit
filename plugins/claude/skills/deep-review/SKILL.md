@@ -1,11 +1,11 @@
 ---
-name: deep
+name: deep-review
 description: "Heavy multi-agent code review with a self-fixing loop. Use when the user says 'deep review', 'deep', or wants an exhaustive review of changes by parallel specialist agents plus codex, fixing confirmed issues until clean."
 argument-hint: "[staged|unstaged|uncommitted|branch|auto] [base] [plan-file] [no-codex] [context...]"
 allowed-tools: Read, Glob, Grep, Bash, Agent
 ---
 
-# deep
+# deep-review
 
 Exhaustive code review of the current changes. Several specialist reviewers run
 in parallel, an external codex pass adds an independent view, and a fixer
@@ -16,6 +16,7 @@ left in the working tree for the user to review and commit.
 ## Arguments
 
 `$ARGUMENTS` may contain, in any order:
+
 - a **diff mode** (default `auto`):
   - `staged` - only `git add`-ed changes (`git diff --cached`)
   - `unstaged` - only not-yet-added changes (`git diff`)
@@ -44,14 +45,14 @@ Otherwise it runs whenever the `codex` binary is installed.
 
 ## File resolution
 
-All bundled files live under the plugin root. Resolve `${CLAUDE_PLUGIN_ROOT}`
-to its absolute path and substitute it into every subagent prompt before
-spawning - subagents run in fresh contexts without plugin env vars.
+All bundled files live in the skill folder `$HOME/.claude/skills/deep-review`.
+Resolve `$HOME` to its absolute path and substitute it into every subagent
+prompt before spawning.
 
-- playbook: `${CLAUDE_PLUGIN_ROOT}/skills/deep/references/review.md`
-- agents:   `${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/*.txt`
-- prompts:  `${CLAUDE_PLUGIN_ROOT}/skills/deep/references/prompts/*.md`
-- scripts:  `${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/*.sh`
+- playbook: `$HOME/.claude/skills/deep-review/references/review.md`
+- agents: `$HOME/.claude/skills/deep-review/references/agents/*.txt`
+- prompts: `$HOME/.claude/skills/deep-review/references/prompts/*.md`
+- scripts: `$HOME/.claude/skills/deep-review/scripts/*.sh`
 
 ## Process
 
@@ -70,7 +71,7 @@ disk - otherwise it is context too.
 If a plan file was passed explicitly, use it. Otherwise scan the plans dir:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/list-plans.sh
+bash $HOME/.claude/skills/deep-review/scripts/list-plans.sh
 ```
 
 Decide by relevance to the current changes, never by how many files are listed.
@@ -87,7 +88,7 @@ Carry the chosen `plan-file` (possibly empty) into the steps below.
 Resolve the diff command:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/resolve-diff.sh <mode> <base>
+bash $HOME/.claude/skills/deep-review/scripts/resolve-diff.sh <mode> <base>
 ```
 
 Store the printed command as `DIFF_COMMAND` and use it unchanged for the whole
@@ -98,7 +99,7 @@ to review - tell the user and stop.
 ### Step 3. Resolve the progress file path
 
 ```bash
-PROGRESS_FILE_PATH=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/progress-path.sh <plan-file>)
+PROGRESS_FILE_PATH=$(bash $HOME/.claude/skills/deep-review/scripts/progress-path.sh <plan-file>)
 ```
 
 (omit `<plan-file>` when no plan was given). With a plan the file sits next to
@@ -154,7 +155,7 @@ plan, or "" when absent.
 Create the progress file now that the context is known:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/init-progress.sh "$PROGRESS_FILE_PATH" "<plan-file>" "<CONTEXT_HEADER>"
+bash $HOME/.claude/skills/deep-review/scripts/init-progress.sh "$PROGRESS_FILE_PATH" "<plan-file>" "<CONTEXT_HEADER>"
 ```
 
 `plan-file` and `CONTEXT_HEADER` are positional - when either is absent pass an
@@ -207,7 +208,7 @@ collect the report. If it has findings, spawn the fixer. One pass.
 phase if the user passed `no-codex`, otherwise run:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/codex-enabled.sh
+bash $HOME/.claude/skills/deep-review/scripts/codex-enabled.sh
 ```
 
 If it prints `no` (disabled via `CODEX_ENABLED`, or `codex` not installed),
@@ -228,7 +229,7 @@ report the remaining findings to the user honestly rather than looping forever.
 
 After any phase that returned findings, read `references/prompts/fixer.md`,
 substitute `PLAN_CONTEXT`, `PROGRESS_FILE_PATH`, `FINDINGS_LIST` (the strict
-report from the phase), and the resolved `${CLAUDE_PLUGIN_ROOT}`. Spawn ONE
+report from the phase), and the resolved `$HOME`. Spawn ONE
 `general-purpose` subagent with that prompt and `mode: "bypassPermissions"`
 (the fixer edits files and runs build/test commands - bypass keeps the loop
 autonomous). The fixer verifies each finding, fixes confirmed ones, validates,
@@ -241,6 +242,7 @@ race on the working tree).
 ### Step 7. Final summary
 
 When the loop finishes, give the user a short summary:
+
 - which phases ran and how many fixer passes happened,
 - total confirmed fixes vs false positives (from the fixer reports),
 - any findings left open if a cap was hit,

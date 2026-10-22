@@ -1,5 +1,0 @@
-{
-  "name": "review",
-  "description": "Heavy multi-agent code review - parallel reviewers, codex external pass, fixer loop",
-  "version": "0.1.0"
-}

@@ -2,7 +2,7 @@
 
 Use this for the fixer agent after collecting review findings (substitute
 `PLAN_CONTEXT`, `PROGRESS_FILE_PATH`, `FINDINGS_LIST`, and the resolved
-absolute `${CLAUDE_PLUGIN_ROOT}`):
+absolute `$HOME`):
 
 ```
 Code review found the following issues. Verify and fix them.
@@ -41,7 +41,7 @@ STEP 5 - LOG PROGRESS:
 Log details: echo "- confirmed: <list>
 - false positives: <list>
 - fixes: <what changed>
-- validation: <what passed or could not be run>" | bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/append-progress.sh PROGRESS_FILE_PATH
+- validation: <what passed or could not be run>" | bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH
 IMPORTANT: Use ONLY the append-progress.sh script. Do NOT use cat >>, echo >>,
 or heredocs directly.
 

@@ -3,7 +3,7 @@
 This is the prompt sent to codex. Substitute `DIFF_COMMAND`, `PLAN_CONTEXT`,
 and `PROGRESS_FILE_PATH` before passing.
 
-Run: `bash ${CLAUDE_PLUGIN_ROOT}/skills/deep/scripts/run-codex.sh "<prompt>"`
+Run: `bash $HOME/.claude/skills/deep-review/scripts/run-codex.sh "<prompt>"`
 with `run_in_background: true`. You will be notified when done - do NOT poll
 or sleep.
 

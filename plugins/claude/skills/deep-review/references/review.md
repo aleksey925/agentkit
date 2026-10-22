@@ -75,11 +75,11 @@ Used when `REVIEW_PHASE` is `comprehensive`.
 Read each agent's prompt file (these are plain reads, not parallel work):
 
 ```
-${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/quality.txt
-${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/implementation.txt
-${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/testing.txt
-${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/simplification.txt
-${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/documentation.txt
+$HOME/.claude/skills/deep-review/references/agents/quality.txt
+$HOME/.claude/skills/deep-review/references/agents/implementation.txt
+$HOME/.claude/skills/deep-review/references/agents/testing.txt
+$HOME/.claude/skills/deep-review/references/agents/simplification.txt
+$HOME/.claude/skills/deep-review/references/agents/documentation.txt
 ```
 
 For each, prepend the shared preamble above.
@@ -116,7 +116,7 @@ straight to the fixer.
 ## Smells mode (1 agent)
 
 Used when `REVIEW_PHASE` is `smells`. Read
-`${CLAUDE_PLUGIN_ROOT}/skills/deep/references/agents/smells.txt`, prepend the
+`$HOME/.claude/skills/deep-review/references/agents/smells.txt`, prepend the
 shared preamble, and run it as a single `general-purpose` agent with
 `mode: "bypassPermissions"`. Produce the same strict bullet-list report (the
 only agent name is `smells`).
