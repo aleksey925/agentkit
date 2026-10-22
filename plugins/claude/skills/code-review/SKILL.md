@@ -1,70 +1,167 @@
 ---
 name: code-review
-description: "Code review of changes"
-allowed-tools: Read, Glob, Grep, Bash
+description: "Code review of changes that only reports findings and never fixes them. Parallel specialist agents (bugs, tests, style, docs) review uncommitted changes, a branch, files or commits; codex adds a second view when asked. Any reviewer can be turned off."
+argument-hint: "[codex] [no-bugs] [no-tests] [no-style] [no-docs] [plan.md] [scope or context...]"
+allowed-tools: Read, Glob, Grep, Bash, Agent, Write
 ---
 
-## Your role
+# code-review
 
-You are a pragmatic senior engineer conducting a code review. You value shipping working code over perfection. Your goal is to catch real problems, not to demonstrate thoroughness.
+Review the changes and report findings. You MUST NOT write or change any code
+during this task - this skill only reports. Fixing is a separate step
+(`fix-review`).
 
-## Rules
+Up to four specialist reviewers run in parallel, each with its own checklist.
+Codex runs next to them only when asked. Then you verify every finding against
+the code and report the real ones.
 
-- You MUST NOT write or change any code during this task. You are only reviewing.
-- Do NOT fabricate issues to appear thorough. False positives waste developer time and erode trust in reviews.
-- If the code is correct and well-written, say so. An empty review with no issues is a valid and valuable outcome.
+## Arguments
 
-## Determine what to review
+`$ARGUMENTS` may contain, in any order:
 
-Follow this decision tree to determine the scope of the review:
+- `codex` - also run an external codex review
+- `no-bugs`, `no-tests`, `no-style`, `no-docs` - turn off that reviewer
+- a path to an existing `.md` plan file that describes the intent of the
+  changes
+- any other text: what to review (files, commits, a branch, a PR number)
+  and/or what the change is about. Decide which by its meaning.
 
-1. **If `$ARGUMENTS` is provided** — review what the user specified (e.g., specific files, commits, or PR number).
+If all four reviewers are turned off and `codex` is not given, tell the user
+there is nothing to run and stop.
 
-2. **If no arguments provided**, run `git status` and `git branch --show-current` to detect the current state:
-   a. **If there are uncommitted changes** (staged or unstaged tracked files) — review those changes. Run `git diff` and `git diff --cached` to collect the full diff.
-   b. **If there are NO uncommitted changes AND the current branch is NOT `main` or `master`** — review all changes on the current branch relative to the main branch. Detect the main branch (`main` or `master`) and run `git diff <main-branch>...HEAD` and `git log <main-branch>..HEAD` to collect the full diff and commit history.
-   c. **If there are NO uncommitted changes AND the current branch IS `main` or `master`** — ask the user what they want to review.
+## File resolution
 
-## Review process
+Bundled files live in `$HOME/.claude/skills/code-review`. Resolve `$HOME` to
+its absolute path before using them.
 
-1. **Collect findings**: Review the changed code. For each potential issue, formulate a concrete scenario in which it causes a failure or problem. If you cannot describe a realistic scenario — discard the finding.
+- reviewers: `$HOME/.claude/skills/code-review/references/agents/<name>.txt`,
+  where `<name>` is `bugs`, `tests`, `style` or `docs`
+- codex prompt: `$HOME/.claude/skills/code-review/references/codex-review.md`
+- codex runner: `$HOME/.claude/skills/code-review/scripts/run-codex.sh`
 
-2. **Validate findings**: Re-analyze each issue before presenting the final report. Filter out false positives — things that initially seemed wrong but are actually correct upon closer inspection. Be skeptical of your own findings.
+## Step 1. Determine what to review
 
-3. **Classify by severity**:
-   - **CRITICAL** — will cause bugs, data loss, security vulnerabilities, or service outage
-   - **IMPORTANT** — logic errors, missed edge cases, wrong data passed to APIs, architectural concerns
-   - **MINOR** — naming issues, style inconsistencies, missing/outdated comments
+1. **If `$ARGUMENTS` names a scope** - review what the user specified (e.g.,
+   specific files, commits, a branch, or a PR number).
+2. **Otherwise**, run `git status` and `git branch --show-current`:
+   1. **If there are uncommitted changes** (staged or unstaged tracked files) -
+      review those changes: `git diff` and `git diff --cached`.
+   2. **If there are NO uncommitted changes AND the current branch is NOT
+      `main` or `master`** - review all changes on the current branch relative
+      to the main branch: `git diff <main-branch>...HEAD` and
+      `git log <main-branch>..HEAD`.
+   3. **If there are NO uncommitted changes AND the current branch IS `main`
+      or `master`** - ask the user what they want to review.
 
-## Output format
+Write the result as `SCOPE`: one or two sentences that tell a reviewer how to
+see the changes, e.g. "Run `git diff` and `git diff --cached` to see the
+changes under review." Run those commands once yourself. If they show nothing,
+tell the user there is nothing to review and stop.
 
-For each finding, start the first line with the file path and line number in the standard linter format, followed by severity and problem summary. Then provide details on the next lines.
+## Step 2. Build the context
 
-Format:
+Assemble `CONTEXT` from up to three sources. Describe only what explains THESE
+changes.
+
+- **plan file**: "The plan file at <path> describes the goal and
+  requirements. Use it to understand what the code is supposed to do."
+- **text from the user** (the non-scope part of `$ARGUMENTS`): "Review focus
+  (provided by user): <text>". On conflict with the session, this wins.
+- **session synthesis**: if the current session did work that explains the
+  changes, summarize the intent in 1-3 sentences as "Inferred intent (from the
+  working session, may be incomplete): <text>". Reviewers treat it as a hint,
+  not a spec.
+
+If none apply, `CONTEXT` is an empty string.
+
+## Step 3. Run the reviewers
+
+**If you do not have the Agent tool** (for example, you run inside a
+subagent), do the review yourself in one pass: read the file of every enabled
+reviewer and use it as your checklist, follow the rules of the shared preamble
+below, and go to Step 4. Codex still runs if asked.
+
+**Otherwise**, for every enabled reviewer read its file and prepend the shared
+preamble (substitute `SCOPE` and `CONTEXT`). Then in ONE response emit one
+Agent tool call per enabled reviewer (`subagent_type: "general-purpose"`),
+plus the codex call if `codex` was given. All calls in one response run in
+parallel; calls in separate responses run one after another. Do NOT embed the
+diff in the prompts - each reviewer runs the commands itself.
+
+Shared preamble:
+
 ```
-path/to/file.py:42: CRITICAL — short problem summary
+You are a READ-ONLY reviewer. Do NOT edit files, and do NOT run git stash,
+git checkout, git reset, or any other command that changes the working tree
+or the index. Other reviewers run in parallel.
+
+SCOPE Read the actual source files for full context - do not review from the
+diff alone.
+
+CONTEXT
+
+Be pragmatic: catch real problems, not issues invented to look thorough. For
+each finding, describe a concrete scenario in which it causes a problem; if
+you cannot, drop it. An empty result is a valid outcome.
+
+Tag every finding with severity:
+- CRITICAL - bugs, data loss, security vulnerabilities, service outage
+- IMPORTANT - logic errors, missed edge cases, wrong data passed to APIs,
+  architectural concerns
+- MINOR - naming, style, comments, documentation drift, nits
+
+Put each finding on its own line as `SEVERITY: file:line - description`,
+followed by a line `Scenario: <the concrete situation>`. If you find nothing,
+reply exactly NO ISSUES FOUND.
+```
+
+**Codex** (only when `codex` was given):
+
+1. Read `references/codex-review.md`, substitute `SCOPE` and `CONTEXT`, and
+   write the prompt with the Write tool to
+   `/tmp/code-review-<timestamp>.codex-prompt.txt`. Do NOT paste the prompt
+   into the command or write it with `echo` or an unquoted heredoc: it
+   contains backticks, and the shell would run them as commands.
+2. Run this with `run_in_background: true`, in the same response as the
+   reviewer agents:
+
+   ```bash
+   bash $HOME/.claude/skills/code-review/scripts/run-codex.sh "$(cat <prompt-file>)"
+   ```
+
+   When the agents return, wait for the codex notification - do NOT poll or
+   sleep.
+
+3. The result merges stdout and stderr. Treat it as a codex failure when the
+   exit code is non-zero, the output is empty, or it has neither
+   `NO ISSUES FOUND` nor any `CRITICAL`/`IMPORTANT`/`MINOR` tag. On failure,
+   note the reason for the report and continue without codex.
+
+## Step 4. Verify the findings
+
+Collect findings from all reviewers and codex. Merge duplicates (same
+file:line and same problem). For each finding, read the code at file:line with
+enough context and check that it is real. Drop false positives - things that
+seemed wrong but are correct on a closer look. Fix the severity if a reviewer
+got it wrong. Be skeptical: a short report of real problems is better than a
+long one with noise.
+
+## Step 5. Report
+
+For each finding, start the first line with the file path and line number in
+the standard linter format, then severity, a short problem summary, and the
+sources in brackets. Put the scenario on the next line:
+
+```
+path/to/file.py:42: CRITICAL - short problem summary [bugs+codex]
 Scenario: concrete situation where this causes a failure.
 ```
 
-Group findings by severity (CRITICAL first, then IMPORTANT, then MINOR). If no issues found — say so explicitly.
-Do not say what has been done correctly; just report the issues.
+Group findings by severity: CRITICAL first, then IMPORTANT, then MINOR. If no
+issues are found, say so explicitly. Do not say what was done correctly.
 
-## Checklist
-
-After the main review, verify these specifically (report only if an actual problem is found):
-- New services/components are added to deployment configs (e.g., helm) if required
-- Data passed to external APIs matches the expected contract
-- Comments and docstrings are consistent with the changed logic
-- Comments comply with the rule in user `CLAUDE.md` (§ Comments). Flag specifically:
-  - Comments that paraphrase code, restate a test, or restate a `CLAUDE.md` design decision.
-  - Sentinel-value comments (`0 means manual`, `nil disables X`) that should be expressed in the type instead.
-  - Section markers ("stage 1", "step 2") inside long functions — flag the function length too.
-  - References to PR/issue/task ("added for X", "used by Y flow").
-  - Comments that justify the edit instead of explaining the code ("matching…", "consistent with…", "now we…", or defending behavior already normal in surrounding code); fails the cold-reader test (only makes sense if you saw the diff).
-  - "Why"-comments that narrate the feature's intent ("so X then Y…") instead of naming a specific wrong turn they prevent - the name already carries the *what*. (A genuine threat-model / external-system *why* stays.)
-  - Long inline explanations (>3-4 lines) or the same comment repeated across files — these are missing design decisions that should live in the project's `CLAUDE.md`.
-  - Do NOT flag standard docstrings on a library's public surface (what the function does, its args, return value) — the § Comments scope exception exempts them; this rule targets inline implementation comments only.
-
-Pay special attention to what data is passed to external APIs. If you don't have enough information about how the external API works or which data should be sent, ask; I will provide documentation.
+After the findings, add one line: which reviewers ran, codex status (off, ran,
+or failed with the reason), and how many findings were dropped as false
+positives.
 
 #$ARGUMENTS

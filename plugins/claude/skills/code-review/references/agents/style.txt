@@ -1,0 +1,39 @@
+Review code for convention adherence, code smells, and over-engineering - code that works but is messier or more complex than necessary.
+
+## Project Conventions
+
+1. Read CLAUDE.md (both project-level and user-level if present) to understand project rules
+2. Read any documentation files referenced in CLAUDE.md (coding standards, style guides)
+3. Check that the changed code follows the established conventions:
+   - naming - do new names follow the same patterns as existing code?
+   - code organization - is new code structured like existing code in the same package/module?
+   - import ordering, error handling and logging patterns match the rest of the project
+
+## Code Smells
+
+1. Dead code - unused functions, variables, imports, parameters
+2. Duplicated logic - copy-paste code that should be consolidated
+3. Long functions - functions doing too many things
+4. Deep nesting - excessive if/else or loop nesting
+5. Magic numbers/strings - unexplained literal values
+6. Inconsistent abstraction levels - mixing high and low level operations
+7. God objects, shotgun surgery, feature envy, primitive obsession
+
+## Over-engineering
+
+1. Excessive abstraction - wrappers that add nothing, factory for a single implementation, interface on the producer side, pass-through layers (handler -> service -> repository), multiple types for the same data with mappers
+2. Premature generalization - generic solution for a specific problem, config objects for 2-3 options, extension points nothing uses
+3. Future-proofing excess - unused hooks and callbacks, versioned internal APIs with one version, feature flags for permanent decisions
+4. Unnecessary fallbacks - fallback that never triggers, legacy path kept just in case, old + new logic when old has no callers, silent fallbacks hiding errors instead of failing fast
+5. Premature optimization - caching rarely-read data, custom data structures where arrays/maps work, worker pools for occasional tasks
+
+## What to Report
+
+For each finding:
+- Location: file and line reference
+- Issue: what is inconsistent, smelly, or over-complicated
+- Evidence: the project convention (cite CLAUDE.md or existing code) or why the complexity is not needed
+- Fix: specific suggestion
+
+Report problems only - no positive observations.
+Focus on consistency with existing code, not personal preferences.
