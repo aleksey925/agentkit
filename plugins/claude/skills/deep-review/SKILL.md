@@ -1,30 +1,25 @@
 ---
 name: deep-review
-description: "Heavy multi-agent code review with a self-fixing loop. Use when the user says 'deep review', 'deep', or wants an exhaustive review of changes by parallel specialist agents plus codex, fixing confirmed issues until clean."
-argument-hint: "[staged|unstaged|uncommitted|branch|auto] [base] [plan-file] [no-codex] [context...]"
+description: "Heavy multi-agent code review with a self-fixing loop. Use when the user says 'deep review', 'deep', or wants an exhaustive review of the branch's committed changes by parallel specialist agents plus codex, fixing and committing confirmed issues until clean."
+argument-hint: "[base] [plan-file] [no-codex] [context...]"
 allowed-tools: Read, Glob, Grep, Bash, Agent
 ---
 
 # deep-review
 
-Exhaustive code review of the current changes. Several specialist reviewers run
-in parallel, an external codex pass adds an independent view, and a fixer
-subagent verifies and fixes confirmed issues. The cycle repeats until a
-critical re-check comes back clean. The fixer does NOT commit - all fixes are
-left in the working tree for the user to review and commit.
+Exhaustive code review of the current branch's committed work. Several
+specialist reviewers run in parallel, an external codex pass adds an
+independent view, and a fixer subagent verifies and fixes confirmed issues and
+commits each pass. The cycle repeats until a critical re-check comes back
+clean. The review covers only commits, so the skill refuses to start while
+there are uncommitted changes.
 
 ## Arguments
 
 `$ARGUMENTS` may contain, in any order:
 
-- a **diff mode** (default `auto`):
-  - `staged` - only `git add`-ed changes (`git diff --cached`)
-  - `unstaged` - only not-yet-added changes (`git diff`)
-  - `uncommitted` - everything not committed = staged + unstaged (`git diff HEAD`)
-  - `branch` - the whole branch's work vs base, including uncommitted
-  - `auto` - staged if any, else unstaged, else branch
-- a **base** branch (only meaningful with `branch` mode; defaults to the
-  detected default branch)
+- a **base** branch to compare against (defaults to the detected default
+  branch)
 - a **plan file** path (optional `.md` file describing the intent of the
   changes)
 - the keyword **`no-codex`** to skip the external codex phase for this run
@@ -36,8 +31,7 @@ When no plan file is passed explicitly, the skill looks in the plans dir
 `complete/` subdir, where finished plans are archived, and uses a discovered
 plan only when one clearly belongs to the changes under review - never just
 because it is the only file there (it may be left over from another branch).
-Otherwise it runs without a plan, which is normal. When in doubt about the
-mode, use `auto`.
+Otherwise it runs without a plan, which is normal.
 
 The codex phase can also be turned off persistently via the
 `CODEX_ENABLED` environment variable (set it to `0`/`false`/`off`/`no`).
@@ -58,15 +52,14 @@ prompt before spawning.
 
 ### Step 1. Resolve the plan and review context
 
-Parse `$ARGUMENTS` into `mode`, `base`, `plan-file`, and the `no-codex`
-keyword (any may be absent). These are a small fixed vocabulary: the diff
-modes (`staged`/`unstaged`/`uncommitted`/`branch`/`auto`), a base branch name,
-a path to an existing `.md` plan, and `no-codex`. Treat ANY remaining
-unrecognized text as free-form review context (`CONTEXT_ARG`) - there is no
-`context=` key, the user just types what they were doing. A bare mode keyword
-counts as a mode only as a standalone leading token; once prose begins, the
-rest is context. Treat a token as the plan only if that `.md` file exists on
-disk - otherwise it is context too.
+Parse `$ARGUMENTS` into `base`, `plan-file`, and the `no-codex` keyword (any
+may be absent). These are a small fixed vocabulary: a base branch name, a path
+to an existing `.md` plan, and `no-codex`. Treat ANY remaining unrecognized
+text as free-form review context (`CONTEXT_ARG`) - there is no `context=` key,
+the user just types what they were doing. A token counts as the base only if
+it is a standalone leading token and `git rev-parse --verify --quiet <token>`
+succeeds; once prose begins, the rest is context. Treat a token as the plan
+only if that `.md` file exists on disk - otherwise it is context too.
 
 If a plan file was passed explicitly, use it. Otherwise scan the plans dir:
 
@@ -83,18 +76,29 @@ and do NOT ask the user to pick one.
 
 Carry the chosen `plan-file` (possibly empty) into the steps below.
 
-### Step 2. Resolve the diff
+### Step 2. Check for uncommitted changes and resolve the diff
 
-Resolve the diff command:
+The review covers only committed work, so first check the working tree:
 
 ```bash
-bash $HOME/.claude/skills/deep-review/scripts/resolve-diff.sh <mode> <base>
+bash $HOME/.claude/skills/deep-review/scripts/check-clean.sh
 ```
 
-Store the printed command as `DIFF_COMMAND` and use it unchanged for the whole
-run (it diffs against the working tree, so it picks up the fixer's changes on
-re-review). Run `DIFF_COMMAND` once now. If it prints nothing, there is nothing
-to review - tell the user and stop.
+If it exits non-zero, show the paths it printed, ask the user to commit or
+remove these changes first, and stop. Review progress files are skipped by
+the check.
+
+Then resolve the diff command:
+
+```bash
+bash $HOME/.claude/skills/deep-review/scripts/resolve-diff.sh <base>
+```
+
+(omit `<base>` when none was given). Also record `git rev-parse HEAD` as
+`<start-HEAD>` for the final summary. Store the printed command as
+`DIFF_COMMAND` and use it unchanged for the whole run (it ends at `HEAD`, so it
+picks up the fixer's commits on re-review). Run `DIFF_COMMAND` once now. If it
+prints nothing, there is nothing to review - tell the user and stop.
 
 ### Step 3. Resolve the progress file path
 
@@ -169,7 +173,7 @@ asking for confirmation:
 
 ```
 deep review - run configuration
-mode:     <mode> (<auto-selected | as given>)
+base:     <base> (<detected | as given>)
 diff:     <DIFF_COMMAND>
 plan:     <plan path | none>
 context:  <one of the states below>
@@ -179,8 +183,7 @@ codex:    <enabled | disabled>
 
 `codex` is `disabled` if the user passed `no-codex` or `codex-enabled.sh`
 prints `no`, otherwise `enabled` (running that script here is fine - Phase C
-checks it again). Add a `base:` line only in `branch` mode. The `context:`
-line states exactly one source state:
+checks it again). The `context:` line states exactly one source state:
 
 - `plan <path>` (append `+ provided ("<short>")` if context was also supplied)
 - `provided ("<short>") + session synthesis`
@@ -255,8 +258,11 @@ report from the phase), and the resolved `$HOME`. Spawn ONE
 `general-purpose` subagent with that prompt and `mode: "bypassPermissions"`
 (the fixer edits files and runs build/test commands - bypass keeps the loop
 autonomous). The fixer verifies each finding, fixes confirmed ones, validates,
-logs to the progress file, and leaves everything uncommitted. Read its
-`FIXES:` report.
+commits its files, and logs to the progress file. Read its `FIXES:` report.
+
+Then run `check-clean.sh` again. If it prints paths, show them and warn that
+these uncommitted changes are left out of the next review. This is
+report-only: do not retry, stop, or commit the leftovers.
 
 Only ONE fixer runs at a time - never in parallel with reviewers (they would
 race on the working tree).
@@ -274,5 +280,6 @@ When the loop finishes, give the user a short summary:
   list one bullet per entry with its reason. If there are none, say so. The
   pattern anchors at the line start, so markers quoted inside findings are
   skipped,
-- a reminder that fixes are uncommitted in the working tree, plus the path to
+- the fixer commits made during the run (`git log --oneline <start-HEAD>..HEAD`,
+  where `<start-HEAD>` is the `HEAD` sha recorded in Step 2), plus the path to
   the progress file.

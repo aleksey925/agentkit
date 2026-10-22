@@ -30,21 +30,24 @@ lines of context. Classify as:
 STEP 2 - FIX:
 - Fix all confirmed issues (including adding missing tests if flagged)
 
-STEP 3 - VALIDATE (MANDATORY - code MUST compile and tests MUST pass):
+STEP 3 - VALIDATE (MANDATORY - code MUST compile and tests MUST pass before
+commit):
 - Build, test, and run the project's validation commands. If a plan was
   supplied and lists validation commands, use those. Otherwise infer them from
   the project (Makefile targets, package scripts, the test runner used by the
   existing tests). If you genuinely cannot determine how to build or test,
   state that explicitly in your report instead of claiming success.
 - If anything fails: fix it and re-run everything.
-- NEVER leave the tree in a broken state.
+- NEVER commit broken code.
 
-STEP 4 - DO NOT COMMIT:
-Leave all fixes in the working tree, unstaged. The user reviews and commits
-manually. Do NOT run git add, git commit, git stash, or any command that
-moves changes out of the working tree.
+STEP 4 - COMMIT (only after STEP 3 passes with zero errors):
+- Commit the files you changed, and only them:
+  bash $HOME/.claude/skills/deep-review/scripts/stage-and-commit.sh "fix code review findings" <changed-files>
+- Do NOT run git add, git commit or git stash yourself - use only the script.
+  The next review reads only commits, so leave nothing uncommitted.
+- Skip this step if you changed no files (all findings were false positives).
 
-STEP 5 - LOG PROGRESS:
+STEP 5 - LOG PROGRESS (after commit):
 Log details: echo "- confirmed: <list>
 - false positives: <list>
 - fixes: <what changed>
