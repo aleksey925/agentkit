@@ -42,7 +42,7 @@ commit):
 
 STEP 4 - COMMIT (only after STEP 3 passes with zero errors):
 - Commit the files you changed, and only them:
-  bash $HOME/.claude/skills/deep-review/scripts/stage-and-commit.sh "fix code review findings" <changed-files>
+  bash $HOME/.claude/skills/review-swarm/scripts/stage-and-commit.sh "fix code review findings" <changed-files>
 - Do NOT run git add, git commit or git stash yourself - use only the script.
   The next review reads only commits, so leave nothing uncommitted.
 - Skip this step if you changed no files (all findings were false positives).
@@ -51,14 +51,14 @@ STEP 5 - LOG PROGRESS (after commit):
 Log details: echo "- confirmed: <list>
 - false positives: <list>
 - fixes: <what changed>
-- validation: <what passed or could not be run>" | bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH
+- validation: <what passed or could not be run>" | bash $HOME/.claude/skills/review-swarm/scripts/append-progress.sh PROGRESS_FILE_PATH
 IMPORTANT: Use ONLY the append-progress.sh script. Do NOT use cat >>, echo >>,
 or heredocs directly.
 If you made any judgment call the finding did not settle, or deviated from the
 plan, log each as its own line so the orchestrator can report it to the user
 (one append per entry):
-bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH "[decision] fixer: <what you decided> - <why>"
-bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH "[deviation] fixer: <how it differs from the plan> - <why>"
+bash $HOME/.claude/skills/review-swarm/scripts/append-progress.sh PROGRESS_FILE_PATH "[decision] fixer: <what you decided> - <why>"
+bash $HOME/.claude/skills/review-swarm/scripts/append-progress.sh PROGRESS_FILE_PATH "[deviation] fixer: <how it differs from the plan> - <why>"
 
 STEP 6 - REPORT (MANDATORY - this is your return value to the parent):
 Your final response MUST include a structured summary starting with "FIXES:"

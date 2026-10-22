@@ -29,6 +29,7 @@ show, and read files."
 
 Each agent prompt MUST require severity tagging on every finding. Tag
 categories:
+
 - CRITICAL: bugs causing crashes, data loss, security holes, race conditions
 - MAJOR: real correctness issues - incorrect behavior, missing error handling,
   broken contracts
@@ -75,11 +76,11 @@ Used when `REVIEW_PHASE` is `comprehensive`.
 Read each agent's prompt file (these are plain reads, not parallel work):
 
 ```
-$HOME/.claude/skills/deep-review/references/agents/quality.txt
-$HOME/.claude/skills/deep-review/references/agents/implementation.txt
-$HOME/.claude/skills/deep-review/references/agents/testing.txt
-$HOME/.claude/skills/deep-review/references/agents/simplification.txt
-$HOME/.claude/skills/deep-review/references/agents/documentation.txt
+$HOME/.claude/skills/review-swarm/references/agents/quality.txt
+$HOME/.claude/skills/review-swarm/references/agents/implementation.txt
+$HOME/.claude/skills/review-swarm/references/agents/testing.txt
+$HOME/.claude/skills/review-swarm/references/agents/simplification.txt
+$HOME/.claude/skills/review-swarm/references/agents/documentation.txt
 ```
 
 For each, prepend the shared preamble above.
@@ -116,7 +117,7 @@ straight to the fixer.
 ## Smells mode (1 agent)
 
 Used when `REVIEW_PHASE` is `smells`. Read
-`$HOME/.claude/skills/deep-review/references/agents/smells.txt`, prepend the
+`$HOME/.claude/skills/review-swarm/references/agents/smells.txt`, prepend the
 shared preamble, and run it as a single `general-purpose` agent with
 `mode: "bypassPermissions"`. Produce the same strict bullet-list report (the
 only agent name is `smells`).

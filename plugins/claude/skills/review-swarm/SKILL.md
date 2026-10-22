@@ -1,11 +1,11 @@
 ---
-name: deep-review
-description: "Heavy multi-agent code review with a self-fixing loop. Use when the user says 'deep review', 'deep', or wants an exhaustive review of the branch's committed changes by parallel specialist agents plus codex, fixing and committing confirmed issues until clean."
+name: review-swarm
+description: "Heavy multi-agent code review with a self-fixing loop. Use when the user says 'review swarm', 'deep review', or wants an exhaustive review of the branch's committed changes by parallel specialist agents plus codex, fixing and committing confirmed issues until clean."
 argument-hint: "[base] [plan-file] [no-codex] [context...]"
 allowed-tools: Read, Glob, Grep, Bash, Agent
 ---
 
-# deep-review
+# review-swarm
 
 Exhaustive code review of the current branch's committed work. Several
 specialist reviewers run in parallel, an external codex pass adds an
@@ -27,7 +27,7 @@ there are uncommitted changes.
   is about / what to focus on) - no key needed; see Step 1
 
 When no plan file is passed explicitly, the skill looks in the plans dir
-(default `docs/plans`, overridable via `DEEP_REVIEW_PLANS_DIR`) and its
+(default `docs/plans`, overridable via `REVIEW_SWARM_PLANS_DIR`) and its
 `complete/` subdir, where finished plans are archived, and uses a discovered
 plan only when one clearly belongs to the changes under review - never just
 because it is the only file there (it may be left over from another branch).
@@ -39,14 +39,14 @@ Otherwise it runs whenever the `codex` binary is installed.
 
 ## File resolution
 
-All bundled files live in the skill folder `$HOME/.claude/skills/deep-review`.
+All bundled files live in the skill folder `$HOME/.claude/skills/review-swarm`.
 Resolve `$HOME` to its absolute path and substitute it into every subagent
 prompt before spawning.
 
-- playbook: `$HOME/.claude/skills/deep-review/references/review.md`
-- agents: `$HOME/.claude/skills/deep-review/references/agents/*.txt`
-- prompts: `$HOME/.claude/skills/deep-review/references/prompts/*.md`
-- scripts: `$HOME/.claude/skills/deep-review/scripts/*.sh`
+- playbook: `$HOME/.claude/skills/review-swarm/references/review.md`
+- agents: `$HOME/.claude/skills/review-swarm/references/agents/*.txt`
+- prompts: `$HOME/.claude/skills/review-swarm/references/prompts/*.md`
+- scripts: `$HOME/.claude/skills/review-swarm/scripts/*.sh`
 
 ## Process
 
@@ -64,7 +64,7 @@ only if that `.md` file exists on disk - otherwise it is context too.
 If a plan file was passed explicitly, use it. Otherwise scan the plans dir:
 
 ```bash
-bash $HOME/.claude/skills/deep-review/scripts/list-plans.sh
+bash $HOME/.claude/skills/review-swarm/scripts/list-plans.sh
 ```
 
 Decide by relevance to the current changes, never by how many files are listed.
@@ -81,7 +81,7 @@ Carry the chosen `plan-file` (possibly empty) into the steps below.
 The review covers only committed work, so first check the working tree:
 
 ```bash
-bash $HOME/.claude/skills/deep-review/scripts/check-clean.sh
+bash $HOME/.claude/skills/review-swarm/scripts/check-clean.sh
 ```
 
 If it exits non-zero, show the paths it printed, ask the user to commit or
@@ -91,7 +91,7 @@ the check.
 Then resolve the diff command:
 
 ```bash
-bash $HOME/.claude/skills/deep-review/scripts/resolve-diff.sh <base>
+bash $HOME/.claude/skills/review-swarm/scripts/resolve-diff.sh <base>
 ```
 
 (omit `<base>` when none was given). Also record `git rev-parse HEAD` as
@@ -103,7 +103,7 @@ prints nothing, there is nothing to review - tell the user and stop.
 ### Step 3. Resolve the progress file path
 
 ```bash
-PROGRESS_FILE_PATH=$(bash $HOME/.claude/skills/deep-review/scripts/progress-path.sh <plan-file>)
+PROGRESS_FILE_PATH=$(bash $HOME/.claude/skills/review-swarm/scripts/progress-path.sh <plan-file>)
 ```
 
 (omit `<plan-file>` when no plan was given). With a plan the file sits next to
@@ -159,7 +159,7 @@ plan, or "" when absent.
 Create the progress file now that the context is known:
 
 ```bash
-bash $HOME/.claude/skills/deep-review/scripts/init-progress.sh "$PROGRESS_FILE_PATH" "<plan-file>" "<CONTEXT_HEADER>"
+bash $HOME/.claude/skills/review-swarm/scripts/init-progress.sh "$PROGRESS_FILE_PATH" "<plan-file>" "<CONTEXT_HEADER>"
 ```
 
 `plan-file` and `CONTEXT_HEADER` are positional - when either is absent pass an
@@ -172,7 +172,7 @@ Then print a single standardized configuration block and proceed without
 asking for confirmation:
 
 ```
-deep review - run configuration
+review swarm - run configuration
 base:     <base> (<detected | as given>)
 diff:     <DIFF_COMMAND>
 plan:     <plan path | none>
@@ -211,7 +211,7 @@ collect the report. If it has findings, spawn the fixer. One pass.
 phase if the user passed `no-codex`, otherwise run:
 
 ```bash
-bash $HOME/.claude/skills/deep-review/scripts/codex-enabled.sh
+bash $HOME/.claude/skills/review-swarm/scripts/codex-enabled.sh
 ```
 
 If it prints `no` (disabled via `CODEX_ENABLED`, or `codex` not installed),
@@ -219,13 +219,13 @@ skip the phase. If it prints `yes`, loop up to **5** iterations:
 
 1. Read `references/prompts/codex-review.md` and substitute placeholders. Write
    the result with the Write tool to
-   `/tmp/deep-review-<name>.codex-prompt.txt`, where `<name>` is the progress
+   `/tmp/review-swarm-<name>.codex-prompt.txt`, where `<name>` is the progress
    file name without `.progress.md` (overwrite it each iteration). Do NOT
    paste the prompt into the command or write it with `echo` or an unquoted
    heredoc: it contains backticks, and the shell would run them as commands,
    so codex would get the prompt without its output format rule.
 2. Run
-   `bash $HOME/.claude/skills/deep-review/scripts/run-codex.sh "$(cat <prompt-file>)"`
+   `bash $HOME/.claude/skills/review-swarm/scripts/run-codex.sh "$(cat <prompt-file>)"`
    with `run_in_background: true`. Wait for the notification - do NOT poll or
    sleep.
 3. Check the result. The tool result merges stdout and stderr, so judge the
