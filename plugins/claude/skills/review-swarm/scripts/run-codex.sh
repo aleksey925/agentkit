@@ -38,8 +38,8 @@ args=("exec" "${sandbox_args[@]}")
 # to the proxy's defaults. Only the literal value `1` activates suppression.
 if [ "${CODEX_NO_OVERRIDES:-}" != 1 ]; then
     args+=(
-        "-c" "model=${CODEX_MODEL:-gpt-5.6-sol}"
-        "-c" "model_reasoning_effort=${CODEX_EFFORT:-xhigh}"
+        "-c" "model=${CODEX_MODEL:-gpt-6.1-sol}"
+        "-c" "model_reasoning_effort=${CODEX_EFFORT:-medium}"
         "-c" "stream_idle_timeout_ms=3600000"
         "-c" "project_doc=$HOME/.claude/CLAUDE.md"
         "-c" "project_doc=./CLAUDE.md"
