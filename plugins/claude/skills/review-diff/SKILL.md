@@ -1,11 +1,11 @@
 ---
-name: code-review
+name: review-diff
 description: "Code review of changes that only reports findings and never fixes them. Parallel specialist agents (bugs, tests, style, docs) review uncommitted changes, a branch, files or commits; codex adds a second view when asked. Any reviewer can be turned off."
 argument-hint: "[codex] [no-bugs] [no-tests] [no-style] [no-docs] [plan.md] [scope or context...]"
 allowed-tools: Read, Glob, Grep, Bash, Agent, Write
 ---
 
-# code-review
+# review-diff
 
 Review the changes and report findings. You MUST NOT write or change any code
 during this task - this skill only reports. Fixing is a separate step
@@ -31,13 +31,13 @@ there is nothing to run and stop.
 
 ## File resolution
 
-Bundled files live in `$HOME/.claude/skills/code-review`. Resolve `$HOME` to
+Bundled files live in `$HOME/.claude/skills/review-diff`. Resolve `$HOME` to
 its absolute path before using them.
 
-- reviewers: `$HOME/.claude/skills/code-review/references/agents/<name>.txt`,
+- reviewers: `$HOME/.claude/skills/review-diff/references/agents/<name>.txt`,
   where `<name>` is `bugs`, `tests`, `style` or `docs`
-- codex prompt: `$HOME/.claude/skills/code-review/references/codex-review.md`
-- codex runner: `$HOME/.claude/skills/code-review/scripts/run-codex.sh`
+- codex prompt: `$HOME/.claude/skills/review-diff/references/codex-review.md`
+- codex runner: `$HOME/.claude/skills/review-diff/scripts/run-codex.sh`
 
 ## Step 1. Determine what to review
 
@@ -119,14 +119,14 @@ reply exactly NO ISSUES FOUND.
 
 1. Read `references/codex-review.md`, substitute `SCOPE` and `CONTEXT`, and
    write the prompt with the Write tool to
-   `/tmp/code-review-<timestamp>.codex-prompt.txt`. Do NOT paste the prompt
+   `/tmp/review-diff-<timestamp>.codex-prompt.txt`. Do NOT paste the prompt
    into the command or write it with `echo` or an unquoted heredoc: it
    contains backticks, and the shell would run them as commands.
 2. Run this with `run_in_background: true`, in the same response as the
    reviewer agents:
 
    ```bash
-   bash $HOME/.claude/skills/code-review/scripts/run-codex.sh "$(cat <prompt-file>)"
+   bash $HOME/.claude/skills/review-diff/scripts/run-codex.sh "$(cat <prompt-file>)"
    ```
 
    When the agents return, wait for the codex notification - do NOT poll or

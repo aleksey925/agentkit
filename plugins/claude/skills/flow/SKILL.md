@@ -1,6 +1,6 @@
 ---
 name: flow
-description: "Orchestrate a dev workflow: implement a task in a subagent, then loop code-review + fix until clean. Or run just the review-fix loop on current changes. NEEDS A REWRITE: its review subagent cannot spawn the parallel code-review reviewers, so code-review falls back to a single pass there."
+description: "Orchestrate a dev workflow: implement a task in a subagent, then loop review-diff + fix until clean. Or run just the review-fix loop on current changes. NEEDS A REWRITE: its review subagent cannot spawn the parallel review-diff reviewers, so review-diff falls back to a single pass there."
 argument-hint: "[review | plan.md | task] [max_review=N]"
 allowed-tools: Read, Glob, Bash, Agent, AskUserQuestion
 ---
@@ -162,7 +162,7 @@ own fixes and do NOT loop: return as soon as the fix step is done. A fresh
 reviewer verifies your fixes on the next round.
 
 Step 1 - FIND: review the current changes by reading and following
-~/.claude/skills/code-review/SKILL.md. That skill owns the scope, the
+~/.claude/skills/review-diff/SKILL.md. That skill owns the scope, the
 severity classification (CRITICAL / IMPORTANT / MINOR), and false-positive
 filtering. Review ONCE.
 

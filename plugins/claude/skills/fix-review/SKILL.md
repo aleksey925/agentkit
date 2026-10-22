@@ -1,6 +1,6 @@
 ---
 name: fix-review
-description: "Verify code-review findings and fix the confirmed ones"
+description: "Verify review-diff findings and fix the confirmed ones"
 argument-hint: "[extra context]"
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion
 ---
