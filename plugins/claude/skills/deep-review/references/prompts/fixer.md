@@ -14,6 +14,13 @@ iterations found and fixed)
 FINDINGS:
 FINDINGS_LIST
 
+NO HUMAN IS AVAILABLE:
+You run unattended. NEVER ask the user anything - do NOT call AskUserQuestion,
+do NOT pause for input or approval. When a fix involves a judgment call the
+finding does not settle, decide it yourself from the project's lint rules,
+CLAUDE.md, and the surrounding code's dominant pattern; when genuinely 50/50,
+take the smaller, more reversible option. Log each such decision in STEP 5.
+
 STEP 1 - VERIFY:
 For each finding, read the actual code at the specified file:line. Check 20-30
 lines of context. Classify as:
@@ -44,6 +51,11 @@ Log details: echo "- confirmed: <list>
 - validation: <what passed or could not be run>" | bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH
 IMPORTANT: Use ONLY the append-progress.sh script. Do NOT use cat >>, echo >>,
 or heredocs directly.
+If you made any judgment call the finding did not settle, or deviated from the
+plan, log each as its own line so the orchestrator can report it to the user
+(one append per entry):
+bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH "[decision] fixer: <what you decided> - <why>"
+bash $HOME/.claude/skills/deep-review/scripts/append-progress.sh PROGRESS_FILE_PATH "[deviation] fixer: <how it differs from the plan> - <why>"
 
 STEP 6 - REPORT (MANDATORY - this is your return value to the parent):
 Your final response MUST include a structured summary starting with "FIXES:"

@@ -3,13 +3,10 @@
 This is the prompt sent to codex. Substitute `DIFF_COMMAND`, `PLAN_CONTEXT`,
 and `PROGRESS_FILE_PATH` before passing.
 
-Run: `bash $HOME/.claude/skills/deep-review/scripts/run-codex.sh "<prompt>"`
-with `run_in_background: true`. You will be notified when done - do NOT poll
-or sleep.
-
 `DIFF_COMMAND` is the command resolved by `resolve-diff.sh` for this run.
 
-If `codex` is not installed, skip this phase.
+How to run codex and how to read its output is defined in SKILL.md Phase C -
+do not restate it here.
 
 ## Prompt
 
@@ -23,6 +20,7 @@ independently, previous fixes may be incomplete or wrong. Check for: bugs,
 security issues, race conditions, error handling, code quality.
 
 Tag each finding with severity:
+
 - CRITICAL: bugs causing crashes, data loss, security holes, race conditions
 - MAJOR: real correctness issues - incorrect behavior, missing error handling,
   broken contracts

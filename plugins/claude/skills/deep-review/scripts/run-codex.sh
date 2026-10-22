@@ -50,4 +50,5 @@ fi
 # <stdin> block even when a prompt arg is given, so an inherited open pipe
 # (e.g. background launch) would block read_to_end forever. /dev/null gives
 # immediate EOF; empty stdin is ignored when a prompt arg is present.
-codex "${args[@]}" "$prompt" < /dev/null
+# exec so a kill on the background task reaches codex, not this wrapper shell.
+exec codex "${args[@]}" "$prompt" < /dev/null

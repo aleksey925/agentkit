@@ -212,11 +212,33 @@ bash $HOME/.claude/skills/deep-review/scripts/codex-enabled.sh
 ```
 
 If it prints `no` (disabled via `CODEX_ENABLED`, or `codex` not installed),
-skip the phase. If it prints `yes`, read `references/prompts/codex-review.md`,
-substitute placeholders, and run it via `run-codex.sh` with
-`run_in_background: true`. Wait for the notification - do NOT poll or sleep. If
-codex reports findings, spawn the fixer. Repeat Phase C until codex returns
-`NO ISSUES FOUND` or no critical/major findings, up to **5** iterations.
+skip the phase. If it prints `yes`, loop up to **5** iterations:
+
+1. Read `references/prompts/codex-review.md` and substitute placeholders. Write
+   the result with the Write tool to
+   `/tmp/deep-review-<name>.codex-prompt.txt`, where `<name>` is the progress
+   file name without `.progress.md` (overwrite it each iteration). Do NOT
+   paste the prompt into the command or write it with `echo` or an unquoted
+   heredoc: it contains backticks, and the shell would run them as commands,
+   so codex would get the prompt without its output format rule.
+2. Run
+   `bash $HOME/.claude/skills/deep-review/scripts/run-codex.sh "$(cat <prompt-file>)"`
+   with `run_in_background: true`. Wait for the notification - do NOT poll or
+   sleep.
+3. Check the result. The tool result merges stdout and stderr, so judge the
+   combined text. It is a codex failure, not a clean review, when the exit
+   code is non-zero, the output is empty, or the output has neither
+   `NO ISSUES FOUND` nor any `CRITICAL`/`MAJOR`/`MINOR` tag. On failure report
+   `Codex review: failed - <exit code or reason>, <first output line>` and go
+   to Phase D.
+4. Scan the output for `CRITICAL` or `MAJOR` (case-insensitive, whole word).
+   Findings win over the marker: if codex printed `NO ISSUES FOUND` but also a
+   CRITICAL or MAJOR finding, treat it as findings. The phase is clean only
+   when the marker is present and no CRITICAL or MAJOR was found - go to
+   Phase D.
+5. Otherwise spawn the fixer with the full codex output. If there was no
+   CRITICAL or MAJOR (minor findings only), stop the loop after the fixer;
+   otherwise go back to item 1.
 
 **Phase D - critical re-check** (`REVIEW_PHASE = critical`): emit the 2 agents
 together. If the report is `Critical re-check: clean ...`, the review is DONE.
@@ -245,6 +267,12 @@ When the loop finishes, give the user a short summary:
 
 - which phases ran and how many fixer passes happened,
 - total confirmed fixes vs false positives (from the fixer reports),
-- any findings left open if a cap was hit,
+- any findings left open if a cap was hit, and a codex failure if there was
+  one,
+- a section **"Decisions made by the fixer"**: collect the entries with
+  `grep -E '^(\[[^]]*\] )?\[(decision|deviation)\]' "$PROGRESS_FILE_PATH"` and
+  list one bullet per entry with its reason. If there are none, say so. The
+  pattern anchors at the line start, so markers quoted inside findings are
+  skipped,
 - a reminder that fixes are uncommitted in the working tree, plus the path to
   the progress file.
