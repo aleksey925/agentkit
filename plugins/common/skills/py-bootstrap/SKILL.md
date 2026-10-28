@@ -242,7 +242,7 @@ repos:
       - id: prettier
         name: prettier
         language: system
-        entry: prettier --write
+        entry: prettier --write --prose-wrap always --print-width 79
         files: ^README\.md$
 
       - id: name-tests
