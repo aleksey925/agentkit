@@ -8,7 +8,7 @@
       "description": "Agent skills"
     },
     {
-      "name": "claude-only",
+      "name": "cc-only",
       "source": "./plugins/claude",
       "description": "Agent skills"
     }

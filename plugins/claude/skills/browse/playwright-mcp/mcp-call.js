@@ -10,8 +10,8 @@ const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
 
-const SKILL_DIR = __dirname;
-const WRAPPER = path.join(SKILL_DIR, 'playwright-mcp.sh');
+const SCRIPT_DIR = __dirname;
+const WRAPPER = path.join(SCRIPT_DIR, 'playwright-mcp.sh');
 const REQ_TIMEOUT = parseInt(process.env.MCP_TIMEOUT_MS || '60000', 10);
 const TRUNCATE = 500;
 

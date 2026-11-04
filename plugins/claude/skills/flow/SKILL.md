@@ -31,6 +31,11 @@ Optional flag anywhere in the args: `max_review=N` caps how many rounds
 that still find issues are allowed before giving up (default 3). Clean
 confirmation rounds do not count against it.
 
+## File resolution
+
+`SKILLS_ROOT` is the absolute path of the folder that holds this skill's
+folder.
+
 ## Templates
 
 - `implement+review` (default): stages `[task, review-loop]`
@@ -65,7 +70,8 @@ finally catch anything left.
 Repeat:
 
 1. Spawn ONE review subagent (Agent tool, `subagent_type:
-   "general-purpose"`) with the Reviewer prompt below.
+   "general-purpose"`) with the Reviewer prompt below, `SKILLS_ROOT`
+   substituted.
 2. Read only its returned verdict (the last line). Do NOT read the code.
    - `VERDICT: DIRTY (<n> issues)` → set `clean_streak` to 0, add 1 to
      `fix_rounds`, report the round's found/fixed list to the user (one
@@ -162,12 +168,12 @@ own fixes and do NOT loop: return as soon as the fix step is done. A fresh
 reviewer verifies your fixes on the next round.
 
 Step 1 - FIND: review the current changes by reading and following
-~/.claude/skills/review-diff/SKILL.md. That skill owns the scope, the
+SKILLS_ROOT/review-diff/SKILL.md. That skill owns the scope, the
 severity classification (CRITICAL / IMPORTANT / MINOR), and false-positive
 filtering. Review ONCE.
 
 Step 2 - FIX: fix the findings by reading and following
-~/.claude/skills/fix-review/SKILL.md. That skill owns what gets fixed and how
+SKILLS_ROOT/fix-review/SKILL.md. That skill owns what gets fixed and how
 - it confirms each finding, fixes all confirmed ones, and runs
 linters/tests and stages files. Do not commit, and do not review again
 after fixing.

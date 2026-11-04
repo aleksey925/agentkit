@@ -19,6 +19,10 @@ Explicit only:
 - "what does codex think", "get codex opinion"
 - "consult codex", "run codex on this"
 
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains this SKILL.md.
+
 ## Workflow
 
 ### Step 1: Build Context
@@ -159,7 +163,7 @@ Run codex through the bundled script. It takes 2-5 minutes for complex
 analysis:
 
 ```bash
-bash "$HOME/.claude/skills/ask-codex/scripts/run-codex.sh" \
+bash "SKILL_DIR/scripts/run-codex.sh" \
   [--preset <name>] [--model <slug>] [--effort <level>] "<prompt here>"
 ```
 

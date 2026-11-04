@@ -9,6 +9,11 @@ Like `browse.sh`, the [playwright-mcp.sh](playwright-mcp.sh) wrapper bakes in
 the headless flags, Windows UA, and the absolute `stealth.js` path, so there is
 nothing to hand-edit. Call it by its absolute path.
 
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains the `browse`
+SKILL.md (the parent of this file's folder).
+
 ## Which mode
 
 Pick by how many steps you need on the page, and decide BEFORE you start:
@@ -38,7 +43,7 @@ One time per container - install Chrome for Testing and its system deps (needs
 `sudo`):
 
 ```bash
-playwright-mcp.sh setup
+"SKILL_DIR/playwright-mcp/playwright-mcp.sh" setup
 ```
 
 It installs through the MCP's own installer on purpose: @playwright/mcp pins a
@@ -58,11 +63,15 @@ supplies every flag and the stealth path:
   "mcpServers": {
     "playwright": {
       "type": "stdio",
-      "command": "<ABSOLUTE_PATH_TO_SKILL>/playwright-mcp/playwright-mcp.sh"
+      "command": "SKILL_DIR/playwright-mcp/playwright-mcp.sh"
     }
   }
 }
 ```
+
+Use the real absolute path in place of `SKILL_DIR`. When the skill is
+installed from a plugin, this path contains the plugin version, so update it
+after each plugin update.
 
 Restart Claude Code after adding it. Tools (from `tools/list`):
 
@@ -101,7 +110,7 @@ needs no prior snapshot:
   invocation to even read it.
 
 ```bash
-MC="$HOME/.claude/skills/browse/playwright-mcp/mcp-call.sh"
+MC="SKILL_DIR/playwright-mcp/mcp-call.sh"
 
 # tool + JSON args, or tool alone, or a full JSON-RPC object (passthrough)
 "$MC" 'browser_navigate {"url":"https://opera.com"}' 'browser_snapshot' --full
@@ -153,7 +162,7 @@ no response matching - so prefer `mcp-call.sh`:
 
 ```bash
 mkfifo /tmp/mcp_pipe 2>/dev/null || true
-"$HOME/.claude/skills/browse/playwright-mcp/playwright-mcp.sh" < /tmp/mcp_pipe &
+"SKILL_DIR/playwright-mcp/playwright-mcp.sh" < /tmp/mcp_pipe &
 MCP_PID=$!
 exec 3>/tmp/mcp_pipe
 

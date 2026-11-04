@@ -26,6 +26,10 @@ never change code. Subagents explore and write the design doc; the critic
 reviews it; you coordinate, run the critic, manage the file, and talk to the
 user. groom designs only - it does NOT implement and does NOT commit.
 
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains this SKILL.md.
+
 ## Modes and arguments
 
 Parse `$ARGUMENTS`. These bare words anywhere in the args are flags - pull
@@ -52,7 +56,7 @@ Codex runs by default on every round, including the first, whenever the
 `codex` binary is installed. `no-codex` turns it off for this round; the
 `CODEX_ENABLED` environment variable turns it off persistently (set it to
 `0`/`false`/`off`/`no`). Whether codex runs is decided by
-`scripts/codex-enabled.sh`.
+`SKILL_DIR/scripts/codex-enabled.sh`.
 
 ## Annotation markers (how you disagree)
 
@@ -160,7 +164,7 @@ Runs after the first draft, before the convergence loop:
    `no-codex`, otherwise:
 
    ```bash
-   bash "$HOME/.claude/skills/groom/scripts/codex-enabled.sh"
+   bash "SKILL_DIR/scripts/codex-enabled.sh"
    ```
 
    If it prints `no` (disabled via `CODEX_ENABLED`, or `codex` not installed),
@@ -171,7 +175,7 @@ Runs after the first draft, before the convergence loop:
    prompt first:
 
    ```bash
-   bash "$HOME/.claude/skills/groom/scripts/run-codex.sh" \
+   bash "SKILL_DIR/scripts/run-codex.sh" \
      [--preset <name>] [--model <slug>] [--effort <level>] \
      "<Codex prompt with PLAN_FILE substituted>"
    ```

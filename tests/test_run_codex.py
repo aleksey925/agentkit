@@ -8,7 +8,8 @@ from typing import TypedDict
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from repo_paths import REPO_ROOT
+
 RUNNER_SKILLS = ("ask-codex", "groom", "review-diff", "review-swarm")
 RUNNER = REPO_ROOT / f"plugins/claude/skills/{RUNNER_SKILLS[0]}/scripts/run-codex.sh"
 PROMPT = "the prompt"

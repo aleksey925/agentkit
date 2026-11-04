@@ -4,6 +4,11 @@ Repo: `~/CodeProjects/kafka-tui` (mounted at `/home/box/app`). A Bubble Tea TUI
 for Kafka. This is the reference run behind the skill; everything here was
 verified end to end.
 
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains the
+`tui-demo-recording` SKILL.md (the parent of `references/`).
+
 ## Launch
 
 `connect local` auto-connects straight to the topics list (no picker). This is
@@ -75,7 +80,7 @@ If the broker advertises `localhost:9092`, run the forwarder and point at
 `localhost`:
 
 ```bash
-node scripts/tcp-forward.mjs 9092 host.docker.internal 9092 &
+node "SKILL_DIR/scripts/tcp-forward.mjs" 9092 host.docker.internal 9092 &
 ```
 
 Verify a real round-trip (produce+consume), not just metadata - metadata uses

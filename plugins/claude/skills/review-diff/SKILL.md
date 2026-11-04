@@ -37,13 +37,12 @@ there is nothing to run and stop.
 
 ## File resolution
 
-Bundled files live in `$HOME/.claude/skills/review-diff`. Resolve `$HOME` to
-its absolute path before using them.
+`SKILL_DIR` is the absolute path of the folder that contains this SKILL.md.
 
-- reviewers: `$HOME/.claude/skills/review-diff/references/agents/<name>.txt`,
-  where `<name>` is `bugs`, `tests`, `style` or `docs`
-- codex prompt: `$HOME/.claude/skills/review-diff/references/codex-review.md`
-- codex runner: `$HOME/.claude/skills/review-diff/scripts/run-codex.sh`
+- reviewers: `SKILL_DIR/references/agents/<name>.txt`, where `<name>` is
+  `bugs`, `tests`, `style` or `docs`
+- codex prompt: `SKILL_DIR/references/codex-review.md`
+- codex runner: `SKILL_DIR/scripts/run-codex.sh`
 
 ## Step 1. Determine what to review
 
@@ -123,8 +122,8 @@ reply exactly NO ISSUES FOUND.
 
 **Codex** (only when `codex` was given):
 
-1. Read `references/codex-review.md`, substitute `SCOPE` and `CONTEXT`, and
-   write the prompt with the Write tool to
+1. Read `SKILL_DIR/references/codex-review.md`, substitute `SCOPE` and
+   `CONTEXT`, and write the prompt with the Write tool to
    `/tmp/review-diff-<timestamp>.codex-prompt.txt`. Do NOT paste the prompt
    into the command or write it with `echo` or an unquoted heredoc: it
    contains backticks, and the shell would run them as commands.
@@ -132,7 +131,7 @@ reply exactly NO ISSUES FOUND.
    reviewer agents:
 
    ```bash
-   bash $HOME/.claude/skills/review-diff/scripts/run-codex.sh \
+   bash "SKILL_DIR/scripts/run-codex.sh" \
      [--preset <name>] [--model <slug>] [--effort <level>] "$(cat <prompt-file>)"
    ```
 

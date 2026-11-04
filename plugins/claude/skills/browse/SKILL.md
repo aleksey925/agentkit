@@ -8,10 +8,14 @@ don't work (site blocks them, returns incomplete content, etc.).
 
 Use the **`browse.sh`** runner shipped next to this file - a thin wrapper
 around **agent-browser** (a native CLI that drives Chrome for agents) with the
-container and stealth settings baked in. Call it by its absolute path
-(`<this skill's dir>/browse.sh`); it forwards every argument to agent-browser,
-so `browse.sh open`, `browse.sh snapshot`, `browse.sh click @e2` behave exactly
+container and stealth settings baked in. Call it by its absolute path,
+`SKILL_DIR/browse.sh`. It forwards every argument to agent-browser, so
+`browse.sh open`, `browse.sh snapshot`, `browse.sh click @e2` behave exactly
 like the underlying commands but always launch masked.
+
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains this SKILL.md.
 
 ## Setup
 
@@ -19,7 +23,7 @@ One time per container - installs Node, a browser, and agent-browser
 (arch-aware: Chrome for Testing on x86, system chromium on ARM):
 
 ```bash
-browse.sh setup
+"SKILL_DIR/browse.sh" setup
 ```
 
 ## Usage
@@ -28,12 +32,12 @@ A background daemon starts on the first command and persists, so calls chain
 and keep the session warm:
 
 ```bash
-browse.sh open example.com
-browse.sh snapshot              # accessibility tree; elements get refs like @e2
-browse.sh click @e2
-browse.sh fill @e3 "hello"
-browse.sh screenshot out.png
-browse.sh close
+"SKILL_DIR/browse.sh" open example.com
+"SKILL_DIR/browse.sh" snapshot  # accessibility tree; refs like @e2
+"SKILL_DIR/browse.sh" click @e2
+"SKILL_DIR/browse.sh" fill @e3 "hello"
+"SKILL_DIR/browse.sh" screenshot out.png
+"SKILL_DIR/browse.sh" close
 ```
 
 - prefer `snapshot` over screenshots - it's text, token-cheap, and yields
@@ -51,7 +55,7 @@ Command groups:
 - read: `snapshot`, `screenshot`, `get`, `is`
 - advanced: `eval <js>`, `wait`, `find`, `batch`
 
-Full reference: `browse.sh skills get core --full`.
+Full reference: `"SKILL_DIR/browse.sh" skills get core --full`.
 
 ## Stealth
 
@@ -65,8 +69,8 @@ still flag the browser - nothing in this skill closes that gap.
 
 ## Limitations
 
-- If a command hangs, the daemon is wedged - `browse.sh close --all`, then
-  retry.
+- If a command hangs, the daemon is wedged -
+  `"SKILL_DIR/browse.sh" close --all`, then retry.
 
 ## Fallback (just in case)
 

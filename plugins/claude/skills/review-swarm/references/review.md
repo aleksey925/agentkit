@@ -6,10 +6,15 @@ current Claude Code, so the parallel fanout below must be initiated from the
 main session.
 
 Resolve placeholders (`DIFF_COMMAND`, `PROGRESS_FILE_PATH`, `PLAN_CONTEXT`,
-`REVIEW_PHASE`), then follow the instructions below from the main session:
-launch the specified parallel Agent calls, collect findings from all returned
-agents, and pass them to the fixer subagent. The orchestrator does NOT fix
-issues itself - the fixer is a separate subagent that handles fixes.
+`REVIEW_PHASE`, and `SKILL_DIR`), then follow the instructions below from the
+main session: launch the specified parallel Agent calls, collect findings from
+all returned agents, and pass them to the fixer subagent. The orchestrator does
+NOT fix issues itself - the fixer is a separate subagent that handles fixes.
+
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains the
+`review-swarm` SKILL.md (the parent of `references/`).
 
 ## How to fan out (READ THIS CAREFULLY)
 
@@ -76,11 +81,11 @@ Used when `REVIEW_PHASE` is `comprehensive`.
 Read each agent's prompt file (these are plain reads, not parallel work):
 
 ```
-$HOME/.claude/skills/review-swarm/references/agents/quality.txt
-$HOME/.claude/skills/review-swarm/references/agents/implementation.txt
-$HOME/.claude/skills/review-swarm/references/agents/testing.txt
-$HOME/.claude/skills/review-swarm/references/agents/simplification.txt
-$HOME/.claude/skills/review-swarm/references/agents/documentation.txt
+SKILL_DIR/references/agents/quality.txt
+SKILL_DIR/references/agents/implementation.txt
+SKILL_DIR/references/agents/testing.txt
+SKILL_DIR/references/agents/simplification.txt
+SKILL_DIR/references/agents/documentation.txt
 ```
 
 For each, prepend the shared preamble above.
@@ -117,7 +122,7 @@ straight to the fixer.
 ## Smells mode (1 agent)
 
 Used when `REVIEW_PHASE` is `smells`. Read
-`$HOME/.claude/skills/review-swarm/references/agents/smells.txt`, prepend the
+`SKILL_DIR/references/agents/smells.txt`, prepend the
 shared preamble, and run it as a single `general-purpose` agent with
 `mode: "bypassPermissions"`. Produce the same strict bullet-list report (the
 only agent name is `smells`).

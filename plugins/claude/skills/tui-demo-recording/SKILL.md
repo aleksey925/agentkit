@@ -29,9 +29,13 @@ if the user says "asciinema"; VHS can emit a `.cast` too.
 GIF is the safe README format: GitHub renders `![demo](img/demo.gif)`
 everywhere. `<video>`/mp4 from a repo path does not render reliably on GitHub.
 
+## File resolution
+
+`SKILL_DIR` is the absolute path of the folder that contains this SKILL.md.
+
 ## The workflow
 
-1. Install the VHS toolchain (`scripts/install-vhs-toolchain.sh`).
+1. Install the VHS toolchain (`SKILL_DIR/scripts/install-vhs-toolchain.sh`).
 2. Make the app reachable + seed realistic data so every screen looks full.
 3. Read the app's **real** keybindings from its code (never guess).
 4. Smoke-test VHS, then write the `.tape` and verify each screen with
@@ -46,8 +50,8 @@ about a keybinding or cursor position is what wastes time.
 
 ## Step 1 - Install the toolchain
 
-Run `scripts/install-vhs-toolchain.sh` (needs `sudo` + network + Go). It
-installs `vhs`, `ttyd`, `ffmpeg`, `chromium`, monospace+emoji fonts, and writes
+Run `SKILL_DIR/scripts/install-vhs-toolchain.sh` (needs `sudo` + network +
+Go). It installs `vhs`, `ttyd`, `ffmpeg`, `chromium`, monospace+emoji fonts, and writes
 the chromium no-sandbox fix (Step 2). Gotchas it already handles, so you know
 why:
 
@@ -110,7 +114,7 @@ localhost -> fails. Workaround that needs no host change: run a tiny in-containe
 forwarder so the advertised `localhost:PORT` relays to the host:
 
 ```bash
-node scripts/tcp-forward.mjs 9092 host.docker.internal 9092 &
+node "SKILL_DIR/scripts/tcp-forward.mjs" 9092 host.docker.internal 9092 &
 ```
 
 Then point the app at `localhost:PORT`. Prove the full path (not just the
