@@ -1,7 +1,7 @@
 ---
 name: groom
 description: "Groom a raw task into a clean design-doc plan: a subagent explores the project and drafts a solution, cross-reviewed by codex. Refine it interactively via your file annotations, or let agents groom autonomously to convergence."
-argument-hint: "[auto] [ask] [no-codex] <task | plan.md>"
+argument-hint: "[auto] [ask] [no-codex] [preset=default|hard] [model=<slug>] [effort=low|medium|high|xhigh|max|ultra] <task | plan.md>"
 allowed-tools: Read, Glob, Grep, Bash, Agent
 ---
 
@@ -37,6 +37,9 @@ them out first, then read what remains:
   loop. Ignored without `auto`.
 - `no-codex` - skip the codex cross-review this round (the critic falls back
   to the internal agent in auto mode).
+- `preset=<name>`, `model=<slug>`, `effort=<level>` - codex model choice,
+  passed to `run-codex.sh` as `--preset`, `--model`, `--effort` on every
+  codex run.
 
 What remains after removing the flags:
 
@@ -169,6 +172,7 @@ Runs after the first draft, before the convergence loop:
 
    ```bash
    bash "$HOME/.claude/skills/groom/scripts/run-codex.sh" \
+     [--preset <name>] [--model <slug>] [--effort <level>] \
      "<Codex prompt with PLAN_FILE substituted>"
    ```
 
@@ -176,9 +180,13 @@ Runs after the first draft, before the convergence loop:
    nuance: it skips cleanly if `codex` is not installed, probes whether the
    bubblewrap sandbox can start and falls back to a bypass when userns is
    blocked (e.g. inside a container), and redirects stdin from `/dev/null` so
-   a background launch never hangs on `codex exec` reading stdin. Overrides:
-   `CODEX_SANDBOX` forces a sandbox mode, `CODEX_MODEL` picks the model,
-   `CODEX_NO_OVERRIDES=1` drops the `-c` flags for proxies that reject them.
+   a background launch never hangs on `codex exec` reading stdin. The preset
+   (from `--preset`, then `CODEX_PRESET`, then `default`) picks the model:
+   `default` is the newest `sol` model with effort `medium`, `hard` is the
+   newest `astra` model with effort `xhigh`. `--model` and `--effort` override
+   it. Overrides: `CODEX_SANDBOX` forces a sandbox mode, `CODEX_NO_OVERRIDES=1`
+   drops the `-c` flags for proxies that reject them, and with them the
+   preset, `--model` and `--effort`.
 
 3. Keep codex's output as the critique passed to the refiner.
 

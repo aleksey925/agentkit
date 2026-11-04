@@ -1,7 +1,7 @@
 ---
 name: review-swarm
 description: "Heavy multi-agent code review with a self-fixing loop. Use when the user says 'review swarm', 'deep review', or wants an exhaustive review of the branch's committed changes by parallel specialist agents plus codex, fixing and committing confirmed issues until clean."
-argument-hint: "[base] [plan-file] [no-codex] [context...]"
+argument-hint: "[base] [plan-file] [no-codex] [preset=default|hard] [model=<slug>] [effort=low|medium|high|xhigh|max|ultra] [context...]"
 allowed-tools: Read, Glob, Grep, Bash, Agent
 ---
 
@@ -23,6 +23,11 @@ there are uncommitted changes.
 - a **plan file** path (optional `.md` file describing the intent of the
   changes)
 - the keyword **`no-codex`** to skip the external codex phase for this run
+- **`preset=<name>`**, **`model=<slug>`**, **`effort=<level>`** - codex model
+  choice, passed to `run-codex.sh` as `--preset`, `--model`, `--effort`.
+  Presets: `default` (newest `sol` model, effort `medium`) and `hard` (newest
+  `astra` model, effort `xhigh`). Without `preset=`, the preset comes from
+  the `CODEX_PRESET` environment variable, then `default`
 - any remaining **free-form text** is taken as review context (what the change
   is about / what to focus on) - no key needed; see Step 1
 
@@ -52,9 +57,10 @@ prompt before spawning.
 
 ### Step 1. Resolve the plan and review context
 
-Parse `$ARGUMENTS` into `base`, `plan-file`, and the `no-codex` keyword (any
-may be absent). These are a small fixed vocabulary: a base branch name, a path
-to an existing `.md` plan, and `no-codex`. Treat ANY remaining unrecognized
+Parse `$ARGUMENTS` into `base`, `plan-file`, the `no-codex` keyword and the
+codex options (any may be absent). These are a small fixed vocabulary: a base
+branch name, a path to an existing `.md` plan, `no-codex`, `preset=<name>`,
+`model=<slug>` and `effort=<level>`. Treat ANY remaining unrecognized
 text as free-form review context (`CONTEXT_ARG`) - there is no `context=` key,
 the user just types what they were doing. A token counts as the base only if
 it is a standalone leading token and `git rev-parse --verify --quiet <token>`
@@ -178,12 +184,13 @@ diff:     <DIFF_COMMAND>
 plan:     <plan path | none>
 context:  <one of the states below>
 progress: <PROGRESS_FILE_PATH>
-codex:    <enabled | disabled>
+codex:    <enabled | disabled> [preset=<name>] [model=<slug>] [effort=<level>]
 ```
 
 `codex` is `disabled` if the user passed `no-codex` or `codex-enabled.sh`
 prints `no`, otherwise `enabled` (running that script here is fine - Phase C
-checks it again). The `context:` line states exactly one source state:
+checks it again). Add only the codex options the user gave. The `context:`
+line states exactly one source state:
 
 - `plan <path>` (append `+ provided ("<short>")` if context was also supplied)
 - `provided ("<short>") + session synthesis`
@@ -225,7 +232,7 @@ skip the phase. If it prints `yes`, loop up to **5** iterations:
    heredoc: it contains backticks, and the shell would run them as commands,
    so codex would get the prompt without its output format rule.
 2. Run
-   `bash $HOME/.claude/skills/review-swarm/scripts/run-codex.sh "$(cat <prompt-file>)"`
+   `bash $HOME/.claude/skills/review-swarm/scripts/run-codex.sh [--preset <name>] [--model <slug>] [--effort <level>] "$(cat <prompt-file>)"`
    with `run_in_background: true`. Wait for the notification - do NOT poll or
    sleep.
 3. Check the result. The tool result merges stdout and stderr, so judge the
@@ -233,7 +240,9 @@ skip the phase. If it prints `yes`, loop up to **5** iterations:
    code is non-zero, the output is empty, or the output has neither
    `NO ISSUES FOUND` nor any `CRITICAL`/`MAJOR`/`MINOR` tag. On failure report
    `Codex review: failed - <exit code or reason>, <first output line>` and go
-   to Phase D.
+   to Phase D. Skip the script's `warning: ...` and
+   `codex: model ..., effort ...` lines when you take the first output line:
+   they are not codex errors.
 4. Scan the output for `CRITICAL` or `MAJOR` (case-insensitive, whole word).
    Findings win over the marker: if codex printed `NO ISSUES FOUND` but also a
    CRITICAL or MAJOR finding, treat it as findings. The phase is clean only

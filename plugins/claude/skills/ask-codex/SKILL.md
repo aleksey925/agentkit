@@ -1,7 +1,7 @@
 ---
 name: ask-codex
 description: Consult OpenAI Codex for investigation, debugging, or code review as a second opinion. Use when the user explicitly asks to "ask codex", "check with codex", "codex review", "what does codex think", or "consult codex". Codex is slow (2-5 min) and runs read-only with full project access - it analyzes, we implement.
-argument-hint: "<question or review request>"
+argument-hint: "[preset=default|hard] [model=<slug>] [effort=low|medium|high|xhigh|max|ultra] <question or review request>"
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
@@ -22,6 +22,10 @@ Explicit only:
 ## Workflow
 
 ### Step 1: Build Context
+
+First pull the codex options out of `$ARGUMENTS`: `preset=<name>`,
+`model=<slug>` and `effort=<level>`. The rest is the question. Pass each
+given option to the script in Step 3 as `--preset`, `--model` or `--effort`.
 
 Gather context from the current conversation:
 
@@ -155,7 +159,8 @@ Run codex through the bundled script. It takes 2-5 minutes for complex
 analysis:
 
 ```bash
-bash "$HOME/.claude/skills/ask-codex/scripts/run-codex.sh" "<prompt here>"
+bash "$HOME/.claude/skills/ask-codex/scripts/run-codex.sh" \
+  [--preset <name>] [--model <slug>] [--effort <level>] "<prompt here>"
 ```
 
 **Execution rules:**
@@ -166,10 +171,28 @@ bash "$HOME/.claude/skills/ask-codex/scripts/run-codex.sh" "<prompt here>"
 The script handles every codex nuance: it skips cleanly if `codex` is not
 installed, probes whether the sandbox can start and picks the right mode, and
 redirects stdin from `/dev/null` so a background launch never hangs on
-`codex exec` reading stdin. Overrides: `CODEX_SANDBOX` forces a sandbox mode,
-`CODEX_MODEL` picks the model (default `gpt-6.1-sol`), `CODEX_EFFORT` sets
-reasoning effort (default `medium`), `CODEX_NO_OVERRIDES=1` drops the `-c`
-flags for proxies that reject them.
+`codex exec` reading stdin.
+
+Model choice: the preset is taken from `--preset`, then `CODEX_PRESET`, then
+`default`. `default` picks the newest `sol` model with effort `medium`; `hard`
+picks the newest `astra` model with effort `xhigh`. The script reads the models
+from `codex debug models` (this needs `jq`). `--model` and `--effort`
+override the preset. When something does not fit:
+
+- no model of the family in the catalog: the model with the top priority
+- the model does not support the preset effort: `medium`, and if it does not
+  support `medium` either, the codex default effort
+- an effort given with `--effort` is used as is, without a check
+- the catalog cannot be read: the model is left to codex, the effort is used
+  without a check
+
+A `codex: model ..., effort ...` line on stderr names the chosen model and
+effort. A lookup warning may come before it.
+
+Overrides: `CODEX_SANDBOX` forces a sandbox mode, `CODEX_NO_OVERRIDES=1` drops
+the `-c` flags for proxies that reject them. Then the preset, `--model` and
+`--effort` are not used either, and the `codex: model ...` line is not
+printed.
 
 ### Step 4: Present Results
 
@@ -243,4 +266,6 @@ confidence:
 
 - **Codex not found**: `run-codex.sh` skips cleanly; install via `npm install -g @openai/codex`
 - **Authentication**: `codex login` if getting auth errors
+- **jq not found**: the script warns and leaves the model to codex;
+  install `jq` to get the preset model
 - **Off-target response**: refine the prompt with more specific file:line references

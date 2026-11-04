@@ -1,7 +1,7 @@
 ---
 name: review-diff
 description: "Code review of changes that only reports findings and never fixes them. Parallel specialist agents (bugs, tests, style, docs) review uncommitted changes, a branch, files or commits; codex adds a second view when asked. Any reviewer can be turned off."
-argument-hint: "[codex] [no-bugs] [no-tests] [no-style] [no-docs] [plan.md] [scope or context...]"
+argument-hint: "[codex] [preset=default|hard] [model=<slug>] [effort=low|medium|high|xhigh|max|ultra] [no-bugs] [no-tests] [no-style] [no-docs] [plan.md] [scope or context...]"
 allowed-tools: Read, Glob, Grep, Bash, Agent, Write
 ---
 
@@ -20,6 +20,12 @@ the code and report the real ones.
 `$ARGUMENTS` may contain, in any order:
 
 - `codex` - also run an external codex review
+- `preset=<name>`, `model=<slug>`, `effort=<level>` - codex model choice,
+  passed to `run-codex.sh` as `--preset`, `--model`, `--effort`. They do not
+  turn codex on by themselves. Presets: `default` (newest `sol` model, effort
+  `medium`) and `hard` (newest `astra` model, effort `xhigh`). Without
+  `preset=`, the preset comes from the `CODEX_PRESET` environment variable,
+  then `default`
 - `no-bugs`, `no-tests`, `no-style`, `no-docs` - turn off that reviewer
 - a path to an existing `.md` plan file that describes the intent of the
   changes
@@ -126,7 +132,8 @@ reply exactly NO ISSUES FOUND.
    reviewer agents:
 
    ```bash
-   bash $HOME/.claude/skills/review-diff/scripts/run-codex.sh "$(cat <prompt-file>)"
+   bash $HOME/.claude/skills/review-diff/scripts/run-codex.sh \
+     [--preset <name>] [--model <slug>] [--effort <level>] "$(cat <prompt-file>)"
    ```
 
    When the agents return, wait for the codex notification - do NOT poll or
@@ -135,7 +142,9 @@ reply exactly NO ISSUES FOUND.
 3. The result merges stdout and stderr. Treat it as a codex failure when the
    exit code is non-zero, the output is empty, or it has neither
    `NO ISSUES FOUND` nor any `CRITICAL`/`IMPORTANT`/`MINOR` tag. On failure,
-   note the reason for the report and continue without codex.
+   note the reason for the report and continue without codex. The
+   `warning: ...` and `codex: model ..., effort ...` lines come from the
+   script, not from codex, so do not take them as the reason.
 
 ## Step 4. Verify the findings
 
