@@ -1,13 +1,15 @@
 ---
-name: readme-style
+name: writing-readmes
 description: >-
-  How the user wants a project README written. Use whenever you write, rewrite,
-  review or extend a README.md or another page for the people who install, run
-  or configure a project: install steps, settings, feature notes. For an app
-  (server, CLI, TUI) it also sets the order and content of the sections.
+  Rules for a project README and other pages for the people who install, run or
+  configure a project. Use whenever you create, rewrite, extend, fix or review
+  a README.md, even for a small change: a new setting, an install step, an
+  example command, a note on a feature. Also use it when a code change adds or
+  changes something the README describes. For an app (server, CLI, TUI) it also
+  sets the order and content of the sections. Not for CLAUDE.md or design docs.
 ---
 
-# README style
+# Writing READMEs
 
 A README is read by someone who wants to install, run or configure the project.
 Every paragraph answers their question: "is this about me, and what do I do?"
