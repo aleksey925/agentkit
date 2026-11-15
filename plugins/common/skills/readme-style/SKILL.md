@@ -148,6 +148,33 @@ it there, and two copies drift apart.
   already. A term explained in the install section and again at the start of
   the configuration section is one fact in two places.
 
+## A feature with several setups
+
+When a feature works differently by where or how the app runs, give each mode a
+heading of its own, named from the reader's side: "On your machine", "On
+server", "With no network". Under each: how to start it, what the reader gets,
+what does not work and the fix. Do not sort the cases of all modes into shared
+lists such as "works", "works with a setting", "does not work": the reader then
+has to pick their own case out of every list.
+
+- The intro of the feature says only what holds in every mode, then a short
+  list of the modes with a link and a few words each. A default that belongs to
+  one mode, such as the local host apps run on, goes in that mode.
+- Describe the general requirement first, then a product as one example. "On
+  server, apps run behind any proxy with https, such as nginx, Caddy or
+  Cloudflare Tunnel", then what any proxy needs, then a link to a subsection
+  with the Cloudflare steps. A text that names one product at the start reads
+  as if it were the only way.
+- A difference on one platform is a limit, not part of the main idea: it goes
+  in the feature's list of limits, not in the intro. Write it as case, effect
+  and reason, so the reader sees why the app acts differently there and what
+  they keep: "In Safari, Run opens the app in a new tab. Inside a page of the
+  app, Safari keeps the app's `localStorage` only in memory, so what it saved
+  is lost once Safari closes." Name the exact thing that was checked
+  (`localStorage`), not a wider word ("data") that also covers what was not.
+- Describe only what the reader cannot guess. A Back button that goes back
+  needs no line.
+
 ## Leave out the design rationale
 
 Why the code is built this way belongs in the project's `CLAUDE.md` or design
@@ -201,6 +228,12 @@ name, a path, a default state of a checkbox - find it in the code.
   config with the project's own parser, run a sample command. A key the parser
   refuses is a broken example. When something cannot be run here, say which
   part was not checked.
+- Steps in the UI of another product (a cloud console, a DNS provider) cannot
+  be checked in the code, and that UI changes. Do not write them from memory: a
+  recipe told to add a DNS record by hand, after the product began to add it
+  itself. Ask the user for the current menu path, or say plainly that the steps
+  were not checked. Write the UI names as they appear, in backticks, joined by
+  `->`: `Networking` -> `Tunnels`.
 
 ## A lead-in covers the whole block
 
@@ -227,8 +260,52 @@ It is not the settings reference again.
 - Keep credentials the way the docs recommend, in files rather than inline, so
   a copied example is a safe one.
 
+## One name for one thing
+
+- Call the project by its name, never "the app", above all when the README also
+  describes apps or other things a reader could call that: "the same reader as
+  scrawl", "scrawl runs as uid 1001".
+- Pick one word for each thing and keep it in the whole README: the feature
+  ("mini app", not "HTML app", "small app" and "app" by turns), the place it
+  shows in ("inside scrawl", not "a frame", "the run screen" and "a page of
+  scrawl"). Define a new term in the first sentence of its section: "A mini app
+  is a `.html` file of your notes that runs inside scrawl."
+- To choose a name, offer the user a few options with what speaks for and
+  against each. A name that differs from the screen and the settings means
+  changing them too, or a README that says one thing and a screen another.
+- Leave the words of the code out: frame, run screen, ticket, "the cookie
+  inside the frame". Say what the reader sees: "inside scrawl", "opens in a new
+  tab".
+
+## An error the reader sees
+
+Write it as what they see, why, and what to do:
+
+1. The exact text on the screen, in backticks. Quote it as the program prints
+   it, even when the README now calls the thing by another name.
+2. The cause in plain words, and when it happens.
+3. The action that fixes it.
+
+Bad - the mechanism first, and three ideas in one sentence:
+
+```
+Right after Run the frame says `Open this app from scrawl`: the browser did
+not keep the app's cookie inside the frame. "Open in a new tab" works.
+```
+
+Good:
+
+```
+If you see `Open this app from scrawl` right after Run, your browser blocks
+the app inside scrawl. This can happen when scrawl runs on your computer and
+the browser has strict privacy settings. Press "Open in a new tab" at the
+top: the app opens in a new tab and works there.
+```
+
 ## Wording
 
+- Write for a reader at about B1 English: short sentences, one idea in each,
+  common words, "you" for the reader.
 - No jargon. Replace it with what it means:
   - "the ticker" -> "the background fetch"
   - "folds it in" -> "commits it too"
@@ -236,6 +313,8 @@ It is not the settings reference again.
   - "headless deployment" -> "a server used only by scripts"
   - "what a request writes" -> "notes saved through the app"
 - No informal abbreviations like "smth".
+- Headings have no articles: "On server", "Running binary", "Webhook instead of
+  polling".
 - "such as" already means the list is not complete; do not add "or something
   else".
 - In a list of settings: `` `NAME=value` - text ``. A hyphen after the
