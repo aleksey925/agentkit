@@ -10,7 +10,7 @@ allowed-tools: Read, Glob, Grep, Bash, Agent
 Turn a raw idea into a clean, detailed design doc (a plan) before any code
 is written. A subagent explores the project and drafts a solution; a critic
 (codex, or an internal agent when codex is absent) cross-reviews it. The
-result is a plan you hand to `/flow` or `/planning`.
+result is a plan ready for implementation.
 
 Two modes:
 
@@ -110,7 +110,7 @@ subagent prompts are shared by both.
    rewrites the file. Wait for it.
 4. Relay to the user: a short summary of changes, the answers to each `??`
    question, and the file path. Remind them: when the doc has no markers
-   left and they are happy, implement with `/flow <file>` or `/planning`.
+   left and they are happy, the plan is ready to implement.
 
 ### Auto run (when `auto` is set)
 
@@ -139,8 +139,8 @@ between rounds (the only human step is the optional clarification gate).
       `## Risks / open questions`, so the decisions taken stay visible. Wait
       for it, then start the next round.
 5. Report to the user: the final approach, how many rounds ran and why it
-   stopped (converged or hit the cap), the plan path, any assumptions made,
-   and the reminder to implement with `/flow <file>` or `/planning`.
+   stopped (converged or hit the cap), the plan path, and any assumptions
+   made.
 
 ### Clarification gate (when `ask` is set)
 

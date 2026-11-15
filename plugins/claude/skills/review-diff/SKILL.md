@@ -8,8 +8,7 @@ allowed-tools: Read, Glob, Grep, Bash, Agent, Write
 # review-diff
 
 Review the changes and report findings. You MUST NOT write or change any code
-during this task - this skill only reports. Fixing is a separate step
-(`fix-review`).
+during this task - this skill only reports.
 
 Up to four specialist reviewers run in parallel, each with its own checklist.
 Codex runs next to them only when asked. Then you verify every finding against
