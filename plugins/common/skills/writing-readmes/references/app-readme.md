@@ -11,6 +11,16 @@ anything.
 
 It ships as one static binary or a Docker image.
 
+![A note with a task list and a Mermaid diagram](docs/screenshots/desktop-note.webp)
+
+![On a phone: a note in light theme, a note in dark theme, the editor](docs/screenshots/phone.webp)
+
+<p>
+  <img src="docs/screenshots/desktop-editor.webp" width="32%" alt="The editor with the text and the preview side by side">
+  <img src="docs/screenshots/desktop-search.webp" width="32%" alt="Search across all notes">
+  <img src="docs/screenshots/desktop-history.webp" width="32%" alt="Two versions of a note compared">
+</p>
+
 ## Features
 
 - **Search** across all notes: fuzzy, exact or by regular expression
@@ -46,16 +56,21 @@ cloud drive to sync on time, and without running extra infrastructure just to
 move text between devices.
 
 So it keeps the notes in a git repository. Any git host will do, most of them
-give you a private repository for free, and every change you make is a commit:
-the notes are backed up and versioned by the same thing that syncs them. You
-open them in a browser, so there is nothing to install on each device.
+give you a private repository for free, and every change to your notes is a
+commit: the notes are backed up and versioned by the same thing that syncs
+them. You open them in a browser, so there is nothing to install on each
+device.
 
-**Compared to Obsidian.** Out of the box, Obsidian syncs between devices only
-through its paid Sync service. The free way is to research community plugins
-and pick one, and each comes at a cost: some need infrastructure of their own,
-such as a database server or a storage bucket, and the git plugin warns that it
-is very unstable on mobile. scrawl is one small binary: run it on any server,
-point it at a repository, and nothing else is needed.
+**Compared to Obsidian.** Obsidian keeps the notes on each device and adds sync
+on top. scrawl keeps one copy on a server and opens it from any browser; a
+device can also keep a read-only copy for when there is no network: see
+[Offline](#offline). With a remote repository, every change made in scrawl is
+also pushed to your git host, a second copy with the whole history. Obsidian's
+own sync is the paid Sync service, and the free ways each cost something:
+iCloud or Syncthing has to run on every device, some plugins need a database
+server or a storage bucket, and the git plugin warns that it is very unstable
+on mobile. scrawl is one small binary: run it on any server, point it at a
+repository, and nothing else is needed.
 
 **When something else fits better.** If you want to edit notes with no network
 at all, or a plugin for every need, Obsidian is the better tool. Offline,
@@ -241,22 +256,29 @@ lines are wrapped so that `git diff` and your git host show changes cleanly.
   brings existing notes to the same style once.
 - `SPACE_FORMAT_ON_SAVE=off`, or `format_on_save: false` for one space, turns
   it off.
+- The contents button in the editor puts a list of the headings between
+  `<!-- toc -->` and `<!-- tocstop -->`. Every save in the editor builds that
+  list again, with formatting on or off, so a change made by hand inside it is
+  lost. A note saved through the API keeps the list it was sent with.
 
 ## How your changes are kept
 
-- **While you type**, the text you have not saved yet is kept in the browser.
-  If the tab closes or the phone unloads it, the next time you open the note
-  scrawl offers to restore it, and warns if the note has changed since.
-- **When you save**, the note is written to a temporary file and renamed into
-  place, so a crash never leaves half a note behind.
-- **If the note changed on disk** since you opened it, the save is refused and
-  you see both versions, instead of one overwriting the other.
-- **Every save is a git commit** while history is on, which is the default: the
-  notes folder is then a git repository, and any earlier version can be
-  restored from the history. In a git space it is also pushed, and scrawl keeps
-  retrying until the push goes through.
-- **A deleted file or folder** waits 5 minutes in a trash, and Undo in the
-  toast puts it back.
+scrawl makes sure a change is not lost and does not overwrite another one.
+
+- **Unsaved text** is kept in the browser. If you close the tab or leave the
+  editor without saving, scrawl offers to bring the text back next time. The
+  editor shows "Draft on device" when the text is kept. In a private window the
+  browser cannot keep it, so scrawl asks before you leave.
+- **A save is all or nothing**: if the server stops in the middle, the note
+  stays as it was.
+- **Nothing is overwritten**: if the note changed since you opened it, on
+  another device or in another editor, scrawl does not save over it and shows
+  you both versions.
+- **Every save goes into the history** (a git commit), so any earlier version
+  can be restored. History is on by default. With a remote repository the
+  change is also pushed to your git host, and scrawl retries until the push
+  goes through.
+- **A deleted file or folder** comes back with Undo for 5 minutes.
 
 ## Static site
 
@@ -299,10 +321,11 @@ history are hidden, since they need the server.
 
 A mini app is a `.html` file of your notes that runs inside scrawl. Run on the
 file's page opens it inside scrawl, under one bar with Back and "Open in a new
-tab". The app works as on any site, with its own `localStorage`, IndexedDB,
-cookies and service worker, and the file is not changed. It can load the web
-files of its folder and anything on the internet. It cannot read your notes,
-act as you or call the API.
+tab". If a folder has an `index.html` file, its row in a folder's list has Run
+too, and Run opens that file. The app works as on any site, with its own
+`localStorage`, IndexedDB, cookies and service worker, and the file is not
+changed. It can load the web files of its folder and anything on the internet.
+It cannot read your notes, act as you or call the API.
 
 Every mini app runs on a host of its own. All `.html` files of one folder are
 one mini app and share its data, so keep each mini app in a folder of its own,
@@ -320,11 +343,21 @@ Some limits:
   not inside scrawl. Inside scrawl, Safari keeps the app's `localStorage` only
   in memory, so everything the app saved there is lost once Safari closes. In a
   tab of its own the app keeps its data as on any site.
+- On plain http at an address of your network, such as
+  `http://192.168.1.5:7272`, with `MINI_APPS_URL` set, Run opens the mini app
+  in a new tab in every browser. See the part for advanced users in
+  [On server](#on-server).
+- Inside scrawl a mini app cannot read the clipboard by itself, for example
+  with a Paste button of its own. A paste you make with the keyboard or the
+  menu works. In a new tab the app can ask for the clipboard as on any site,
+  but not on plain http at an address of your network: there the browser gives
+  no site the clipboard.
 - A mini app opens only from scrawl. If you open its address directly, you see
-  `Open this app from scrawl`. If you see this right after Run, your browser
-  blocks the app inside scrawl. This can happen when scrawl runs on your
-  computer and the browser has strict privacy settings. Press "Open in a new
-  tab" at the top: the app opens in a new tab and works there.
+  `To use this app, sign in to scrawl and open it from there`. If you see this
+  right after Run, your browser blocks the app inside scrawl. This can happen
+  when scrawl runs on your computer and the browser has strict privacy
+  settings. Press "Open in a new tab" at the top: the app opens in a new tab
+  and works there.
 - A service worker of the mini app itself replaces scrawl's, and keeps serving
   the files it stored after the app's cookie ended, as on any site.
 - A renamed or moved folder is a new mini app: the data the old one saved stays
@@ -334,18 +367,15 @@ Some limits:
 
 ### On your machine
 
-Nothing to set. Open scrawl in Chrome or Firefox at the link it prints at
-start, `http://127.0.0.1:7272`, with or without a password. Run opens the mini
-app at `http://app-<id>.localhost:7272`.
+Nothing to set. Open scrawl at the link it prints at start,
+`http://127.0.0.1:7272`, not at `localhost`. In this setup the names under
+`localhost`, such as `app-<id>.localhost`, belong to mini apps. If scrawl has a
+password and is opened at `localhost` too, a mini app written to do harm could
+sign you out of scrawl or sign you in as another user. A usual mini app does
+nothing like this.
 
-- `http://localhost:7272` works too, but with a password use `127.0.0.1`:
-  `localhost` and `app-<id>.localhost` are neighbor names, and a mini app there
-  can sign you out, or into another account. The same goes for
-  `scrawl.localhost`. scrawl logs a warning about this at start.
-- Safari on macOS likely cannot open `app-<id>.localhost` and shows its error
-  page instead of the mini app. Use Chrome or Firefox.
-- At `127.0.0.1` and `localhost` a mini app inside scrawl is not kept for use
-  with no network, see [With no network](#with-no-network).
+Here a mini app is not kept for use with no network, see
+[With no network](#with-no-network).
 
 ### On server
 
@@ -358,31 +388,35 @@ the proxy needs:
 2. These names sent to scrawl, with the `Host` header the browser sent, see
    [Server settings](#server-settings).
 
-Then set `APPS_URL=https://app-{id}.example.com` and `TRUSTED_PROXY=true`. With
-Cloudflare Tunnel, see [Cloudflare Tunnel](#cloudflare-tunnel).
+Then set `MINI_APPS_URL=https://app-{id}.example.com` and `TRUSTED_PROXY=true`.
+With Cloudflare Tunnel, see [Cloudflare Tunnel](#cloudflare-tunnel).
 
 What can go wrong:
 
-- scrawl opened at an address of the network with no `APPS_URL`, such as
-  `http://192.168.1.5:7272`: Run says `HTML apps do not run at this address`.
-- `APPS_URL` has no `{id}`, such as `https://apps.example.com`, or only `{id}`
-  in its first label, such as `https://{id}.example.com`: scrawl does not
-  start, and its message shows the form to use, `https://app-{id}.example.com`.
-- `APPS_URL` is https and a password is set, but neither `TRUSTED_PROXY=true`
-  nor `AUTH_SECURE=always` is: scrawl does not start, and its message names the
-  setting to add, `TRUSTED_PROXY=true` behind a proxy.
-- With `TRUSTED_PROXY=true` and `APPS_URL=https://app-{id}.example.com`, do not
-  also open scrawl at `http://notes.example.com`: the sign-in there is not
-  protected, and scrawl does not warn about it.
+- scrawl opened at an address of the network with no `MINI_APPS_URL`, such as
+  `http://192.168.1.5:7272`: Run says `Mini apps do not run at this address`.
+- `MINI_APPS_URL` has no `{id}`, such as `https://apps.example.com`, or only
+  `{id}` in its first label, such as `https://{id}.example.com`: scrawl does
+  not start, and its message shows the form to use,
+  `https://app-{id}.example.com`.
+- `MINI_APPS_URL` is https and a password is set, but neither
+  `TRUSTED_PROXY=true` nor `AUTH_SECURE=always` is: scrawl does not start, and
+  its message names the setting to add, `TRUSTED_PROXY=true` behind a proxy.
+- With `TRUSTED_PROXY=true` and `MINI_APPS_URL=https://app-{id}.example.com`,
+  do not also open scrawl at `http://notes.example.com`: the sign-in there is
+  not protected, and scrawl does not warn about it.
 
 **For advanced users:** to run mini apps on a home network without https, set
 up a local DNS that answers any `app-...` name with the address of this
-machine, and set `APPS_URL` to it, such as
+machine, and set `MINI_APPS_URL` to it, such as
 `http://app-{id}.apps.home.lan:7272`. A hosts file is not enough, since it has
 no wildcard. With a password, open scrawl at the IP of the machine, such as
 `http://192.168.1.5:7272`, not at a name such as `notes.home.lan`: it is a
 neighbor of the names of mini apps, and a mini app there can sign you out, or
-into another account. scrawl logs a warning about this at start.
+into another account. scrawl logs a warning about this at start. At any plain
+http address of the network, the IP or a name, Run opens the mini app in a new
+tab, not inside scrawl: with scrawl at the IP, over http the browser does not
+keep the app's cookie inside scrawl.
 
 ### Cloudflare Tunnel
 
@@ -393,7 +427,7 @@ To run mini apps behind Cloudflare Tunnel, with scrawl at `notes.example.com`:
    `Published application`: subdomain `*`, domain `example.com`, the same
    service URL as scrawl. Cloudflare adds the DNS record `*.example.com`
    itself.
-2. Set `APPS_URL=https://app-{id}.example.com` and `TRUSTED_PROXY=true`.
+2. Set `MINI_APPS_URL=https://app-{id}.example.com` and `TRUSTED_PROXY=true`.
 
 The name around `{id}` can be any, such as `notes-app-{id}.example.com`, but it
 stays one level under the domain: the free certificate covers `*.example.com`
@@ -406,20 +440,13 @@ and mini apps check their own cookie.
 
 ### With no network
 
-With Offline access on, a mini app opens with no network once it ran with one,
-and keeps the data it saved in the browser.
+If Offline access is on, a mini app opens with no network too, with the data it
+saved, but only after you have run it once with a network in that browser.
 
-- The whole folder of the mini app is kept, not files from other sites such as
-  a CDN.
-- Inside scrawl, it works where scrawl and the mini app are on one site: a
-  domain with `APPS_URL`, or locally `http://scrawl.localhost:7272`, which with
-  a password is a neighbor name, see [On your machine](#on-your-machine). At
-  `127.0.0.1` and `localhost` the mini app runs inside scrawl but is not kept
-  there, and with no network Run shows
-  `This browser does not keep this app for offline use.`: there the browser
-  treats the mini app as another site and gives scrawl's worker no cookie. In a
-  new tab it is kept.
-- A mini app with a service worker of its own keeps its files its own way.
+- Only the files in the mini app's folder are kept. What it loads from the
+  internet, such as a library from a CDN, is not, so such a mini app may not
+  work with no network.
+- A mini app with a service worker of its own decides itself what to keep.
 
 ## Configuration
 
@@ -463,7 +490,7 @@ required, everything else has a working default.
 | `RESCAN`           |                       | `60s`               | how often every folder is reread to find changes; negative turns it off, except with `WATCH=poll`                                                                                                                                       |
 | `HISTORY`          |                       | `auto`              | keep a git history of changes; `on` fails without git, `off` never touches the notes; always on for a space that is a git repository                                                                                                    |
 | `TRUSTED_PROXY`    |                       | `false`             | trust `X-Forwarded-For` and `-Proto`; set it behind a reverse proxy                                                                                                                                                                     |
-| `APPS_URL`         |                       |                     | where mini apps run: a URL with `{id}` in its first label, such as `https://app-{id}.example.com`, each mini app on a host of its own; empty runs them on `app-<id>.localhost`, see [Mini apps](#mini-apps)                             |
+| `MINI_APPS_URL`    |                       |                     | where mini apps run: a URL with `{id}` in its first label, such as `https://app-{id}.example.com`, each mini app on a host of its own; empty runs them on `app-<id>.localhost`, see [Mini apps](#mini-apps)                             |
 | `TZ`               |                       | `UTC`               | timezone                                                                                                                                                                                                                                |
 | `DEBUG`            |                       | `false`             | debug logging                                                                                                                                                                                                                           |
 
@@ -753,10 +780,10 @@ read and not write.
 
 ```
 TOKEN=scrawl_...
-curl -sH "Authorization: Bearer $TOKEN" http://localhost:7272/api/spaces
-curl -sH "Authorization: Bearer $TOKEN" http://localhost:7272/s/notes/api/tree
-curl -sH "Authorization: Bearer $TOKEN" 'http://localhost:7272/s/notes/api/search?q=redis'
-curl -sH "Authorization: Bearer $TOKEN" http://localhost:7272/s/notes/api/file/python/notes.md
+curl -sH "Authorization: Bearer $TOKEN" http://127.0.0.1:7272/api/spaces
+curl -sH "Authorization: Bearer $TOKEN" http://127.0.0.1:7272/s/notes/api/tree
+curl -sH "Authorization: Bearer $TOKEN" 'http://127.0.0.1:7272/s/notes/api/search?q=redis'
+curl -sH "Authorization: Bearer $TOKEN" http://127.0.0.1:7272/s/notes/api/file/python/notes.md
 ```
 
 Every endpoint that works with notes lives under its space,
@@ -767,7 +794,7 @@ file in between, the `rev` no longer matches and the save is refused instead of
 overwriting their change:
 
 ```
-BASE=http://localhost:7272/s/notes
+BASE=http://127.0.0.1:7272/s/notes
 REV=$(curl -sH "Authorization: Bearer $TOKEN" $BASE/api/file/python/notes.md | jq -r .rev)
 curl -s -X PUT -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -d '{"content":"# Notes\n\nredis notes\n","rev":"'"$REV"'"}' \

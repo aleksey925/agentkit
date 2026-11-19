@@ -62,6 +62,15 @@ it, checks it, or fixes a problem by it. Leave out the rest.
 - Leave out: "the check is a trial merge and not a commit count". The reader
   does nothing with it; "it compares content, not commits" is enough.
 
+### Notes on unreleased changes
+
+The README describes the current release. A rename or a removal made on a
+branch that is not merged, or between dev builds, gets no note on the old name:
+nobody runs that name yet. "Up to v0.6.0-dev16 this setting was `APPS_URL`" was
+written about a setting renamed on an unmerged branch. A note on an old name
+belongs only to a change that breaks a released version, and it goes in the
+release notes, not the README.
+
 ### What the reader can guess
 
 Describe only what the reader cannot guess. A Back button that goes back needs
@@ -96,6 +105,10 @@ a command, a flag name, a path, the default state of a checkbox.
   be checked in the code, and that UI changes. Do not write them from memory:
   ask the user for the current menu path, or say plainly that the steps were
   not checked.
+- A limit of a browser or an OS needs a source: the project's notes of what was
+  seen (in scrawl, `docs/quirks.md`) or a run. A line with neither goes, above
+  all one that says "likely". "Safari on macOS likely cannot open mini apps"
+  had no source, and the user opened one in Safari at once.
 
 ## Structure of an app README
 
@@ -179,6 +192,85 @@ effect and reason, so the reader sees why the app acts differently there and
 what they keep: "In Safari, Run opens the app in a new tab. Inside a page of
 the app, Safari keeps the app's `localStorage` only in memory, so what it saved
 is lost once Safari closes."
+
+### Main condition and limits
+
+The first sentence of a feature says what it gives and the condition the reader
+must meet, together. A condition left for the list below gets missed. "A mini
+app opens with no network, but only after you have run it once with a network
+in that browser" - not "opens with no network" with the first run as the third
+item.
+
+- **A limit of one mode lives in that mode's section.** That mini apps are not
+  kept offline on your machine is said in "On your machine"; "With no network"
+  does not repeat it. A reader of another mode skips it there.
+- **No setup in a feature section.** How to set up the server and its settings
+  is in the setup sections. "If scrawl runs on a server with `MINI_APPS_URL`
+  and Offline access is on" at the start of "With no network" repeats them and
+  hides what the feature gives.
+- **No excuse for a limit.** "On your machine a mini app is not kept, but there
+  you do not need it" reads as an excuse. State the limit, or drop it if the
+  mode's section has it.
+- **No workaround the README calls unsafe.** Offering `scrawl.localhost` to
+  keep mini apps offline, while "On your machine" says not to use it with a
+  password, gives the reader two opposite answers.
+- **Screen text is for a troubleshooting entry.** In a feature description the
+  condition is enough; "Before that, Run with no network shows `...`" added
+  nothing once the first sentence named the condition.
+- **No reason from inside the code**: "the browser treats the mini app as
+  another site and gives scrawl's worker no cookie" goes. The reader does
+  nothing with it.
+
+Bad - technical, a mode's limit in the shared section, an unsafe workaround:
+
+```
+With Offline access on, a mini app opens with no network once it ran with one,
+and keeps the data it saved in the browser.
+
+- The whole folder of the mini app is kept, not files from other sites such as
+  a CDN.
+- Inside scrawl, it works where scrawl and the mini app are on one site: a
+  domain with `MINI_APPS_URL`, or locally `http://scrawl.localhost:7272`, which
+  is not safe with a password, see On your machine. At `127.0.0.1` and
+  `localhost` the mini app runs inside scrawl but is not kept there, and with
+  no network Run shows `This browser does not keep this mini app for offline
+  use.`: there the browser treats the mini app as another site and gives
+  scrawl's worker no cookie. In a new tab it is kept.
+```
+
+Good:
+
+```
+If Offline access is on, a mini app opens with no network too, with the data it
+saved, but only after you have run it once with a network in that browser.
+
+- Only the files in the mini app's folder are kept. What it loads from the
+  internet, such as a library from a CDN, is not, so such a mini app may not
+  work with no network.
+- A mini app with a service worker of its own decides itself what to keep.
+```
+
+### Section about safety
+
+A section such as "How your changes are kept" tells the reader what they can
+rely on. Open it with one line that says what is promised: "scrawl makes sure a
+change is not lost and does not overwrite another one". Start each item with
+what the reader gets, then one plain sentence on when it matters. The way it is
+done stays out.
+
+Bad - the mechanism is the point:
+
+```
+- **When you save**, the note is written to a temporary file and renamed
+  into place, so a crash never leaves half a note behind.
+```
+
+Good:
+
+```
+- **A save is all or nothing**: if the server stops in the middle, the note
+  stays as it was.
+```
 
 ### Feature with several setups
 
@@ -284,18 +376,93 @@ Write it as what they see, why, and what to do:
 Bad - the mechanism first, and three ideas in one sentence:
 
 ```
-Right after Run the frame says `Open this app from scrawl`: the browser did
-not keep the app's cookie inside the frame. "Open in a new tab" works.
+Right after Run the frame says `To use this app, sign in to scrawl and open
+it from there`: the browser did not keep the app's cookie inside the frame.
+"Open in a new tab" works.
 ```
 
 Good:
 
 ```
-If you see `Open this app from scrawl` right after Run, your browser blocks
-the app inside scrawl. This can happen when scrawl runs on your computer and
+If you see `To use this app, sign in to scrawl and open it from there` right
+after Run, your browser blocks the app inside scrawl. This can happen when scrawl runs on your computer and
 the browser has strict privacy settings. Press "Open in a new tab" at the
 top: the app opens in a new tab and works there.
 ```
+
+### Warning about a risk
+
+A warning says what to do, for whom, and what can happen otherwise. Most are
+about a rare case, so keep it to a few sentences, but do not cut it so short
+that the reader cannot see why.
+
+1. **The action first**: "Open scrawl at `http://127.0.0.1:7272`, not at
+   `localhost`".
+2. **The default it depends on**, if the text has not said it yet. A warning
+   about `localhost` means nothing until the reader knows that mini apps run at
+   `app-<id>.localhost` by default.
+3. **The case**, named by what the reader set up: "If scrawl has a password".
+   "If scrawl asks for a password" read as unclear.
+4. **What can happen, and what cannot**, in the reader's words: "could sign you
+   out or sign you in as another user. It cannot read your notes". Not the
+   code's words ("neighbor names", "cookie tossing").
+5. **How rare it is**: if it takes something made to do harm, say so: "a mini
+   app written to do harm could ... A usual mini app does nothing like this".
+
+Do not make it sound worse than it is: "unauthorized access" for an app that
+can only switch the sign-in scares the reader for nothing. Before calling a
+case too rare to mention, check whether the README's own Quick start leads into
+it: the scrawl case is the local run with a password, which is the second Quick
+start run.
+
+Bad - the reader cannot tell why, nor how serious it is:
+
+```
+- With a password, open scrawl only at `127.0.0.1`. At `localhost` or
+  `scrawl.localhost` a mini app can sign you out, or into another account.
+```
+
+Good:
+
+```
+Nothing to set. Open scrawl at the link it prints at start,
+`http://127.0.0.1:7272`, not at `localhost`. In this setup the names under
+`localhost`, such as `app-<id>.localhost`, belong to mini apps. If scrawl has a
+password and is opened at `localhost` too, a mini app written to do harm could
+sign you out of scrawl or sign you in as another user. A usual mini app does
+nothing like this.
+```
+
+### Screenshots
+
+- **Where**: all together, right after the intro and before Features. One or
+  two main pictures at full width (the main screen on a desktop, the phone),
+  then the others small in one row:
+
+  ```
+  <p>
+    <img src="docs/screenshots/desktop-editor.webp" width="32%" alt="...">
+    <img src="docs/screenshots/desktop-search.webp" width="32%" alt="...">
+    <img src="docs/screenshots/desktop-history.webp" width="32%" alt="...">
+  </p>
+  ```
+
+  A row apart from the main pictures, such as one under Features, looks random.
+
+- **What**: a few, about five, each a different view: the main screen, the
+  editor, search, history. A desktop and a phone, a light and a dark theme.
+  Several phone screens go side by side in one picture.
+- **Content**: notes made up for the shot that look like real use: a project
+  with a task list and a diagram, a trip, a recipe. Test fixtures look like
+  test fixtures. Keep this content out of the repository unless asked.
+- **Format**: `.webp`. Shoot at 2x or 3x and scale down, desktop to about
+  1600px wide. Round the corners, add a thin gray border and keep the
+  background transparent, so the picture sits well on both GitHub themes. The
+  whole set is a few hundred KB.
+- **Alt text** says what the picture shows: "A note with a task list and a
+  Mermaid diagram".
+- The pictures get a folder of their own, such as `docs/screenshots/`. If the
+  project's `CLAUDE.md` lists its folders, add it there.
 
 ### Lead-in before a block
 
@@ -360,17 +527,30 @@ It is not the settings reference again.
   else".
 - In a list of settings: `` `NAME=value` - text ``. A hyphen after the
   backticked value, not a period.
+- A list with one item is a sentence.
+- To make a paragraph shorter, keep every fact and cut the words around them:
+  join sentences that say one thing, drop lead-ins such as "Out of the box, ...
+  only through", and let examples after a colon stand for a list of ways. A
+  paragraph on Obsidian went from 160 words to 110 with nothing lost.
 
 ## Before finishing
 
 Run these checks on the text you wrote or changed, and in a review on the text
 you review. Each one is an action, not a box to tick.
 
+- Read the whole section you touched, not only your own lines. Another session
+  or a review fixer may have written a line that breaks these rules: a note on
+  a dev build came in with "fix code review findings", and a copy of the README
+  carried it on.
+
 - Every fact is found in the code: defaults, limits, commands, flags, paths.
 - Every number is counted: "the messages tell four things apart" stood over a
   list of six.
 - Every `#anchor` link matches a heading, and Contents matches the headings. A
   renamed heading breaks the links to it, and nothing warns about that.
+- A term you removed or renamed is gone from the whole README. A sentence
+  elsewhere may still lean on it: after "neighbor names" left one section,
+  another still said "which with a password is a neighbor name, see ...".
 - Every example you can run is run: load a sample config with the project's own
   parser, run a sample command. A key the parser refuses is a broken example.
 - Say plainly which parts were not checked: an example that cannot run here,
