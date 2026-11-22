@@ -122,11 +122,12 @@ an app, and match its tone and level of detail.
 
 Sections, in this order. Leave out a section the app has nothing for.
 
-1. **Title and one line** saying what the app is: "A web app for a folder of
-   markdown files."
+1. **Title, badges and one line** saying what the app gives: "Markdown notes in
+   any browser, from a folder or a git repository." See [Badges](#badges).
 2. **Intro**: one short paragraph on what the reader can do with it and the
    main idea that sets it apart, then one line on how it ships: "one static
-   binary or a Docker image".
+   binary or a Docker image". Right after it, the main picture, see
+   [Main picture](#main-picture).
 3. **Features**: a list, each item a bold name and what it gives the user, in
    one or two lines. What it gives, not how it is built.
 4. **Why <app>**: the problem the app was made for; a fair comparison with the
@@ -142,8 +143,8 @@ Sections, in this order. Leave out a section the app has nothing for.
    list explains every setting in it the reader would not guess, so they can
    understand the run without scrolling down.
 7. **Installation**: one subsection per way to get it (Docker, a package
-   manager, from source), then how to run the binary without Docker. Link to
-   Quick start and Configuration instead of repeating them.
+   manager, from source), and nothing else: no section on how to run it. Link
+   to Quick start and Configuration instead of repeating them.
 8. **A section per feature** that needs more than its line in Features: what
    the user sees, its limits, how to turn it off. Name it from the user's side:
    "How your changes are kept", "Offline". See
@@ -171,8 +172,8 @@ they have what they need.
 Put a fact next to the thing it explains, and say it once. A reader looks for
 it there, and two copies drift apart.
 
-- An install section holds the ways to install and run, and nothing else. What
-  a setting means goes beside that setting.
+- An install section holds the ways to install, and nothing else. How to run is
+  in Quick start, what a setting means goes beside that setting.
 - A note on a value goes under its table: how to hash a password belongs beside
   `AUTH_USERS`, the list of users who can sign in, not in the install steps.
 - A note on a requirement goes beside what it requires: "the folder has to be
@@ -433,46 +434,73 @@ sign you out of scrawl or sign you in as another user. A usual mini app does
 nothing like this.
 ```
 
-### Screenshots
+### Main picture
 
-- **Where**: all together, right after the intro and before Features. One or
-  two main pictures at full width (the main screen on a desktop, the phone),
-  then the others small in one row:
+One picture right after the intro, not a set of screenshots: one screen of the
+app on a desktop and on a phone at once. In scrawl it is one note in a browser
+window, with a phone on the right that overlaps the window a little and shows
+the same note.
+
+- **The screen**: the main one, with a page that shows several features at
+  once. The scrawl note has a task list, a Gantt chart, a diagram and a table.
+- **Frames**: draw a frame around each shot so it reads as a real device: a
+  window with a title bar and an address, a phone with its status bar. On the
+  phone, show the app as it looks installed to the home screen, if it can be
+  installed.
+- **Content**: everything on the screen looks like real use, the sidebar too.
+  The tree shows folders such as `projects`, `databases`, `reference`, not test
+  words or folders like `showcase/`. If the project has sample data (in scrawl,
+  `examples/data`), make it look real and shoot it. Otherwise make up content
+  for the shot and keep it out of the repository unless asked.
+- **Both themes**: two files, light and dark. `<picture>` shows the one that
+  matches the reader's GitHub theme:
 
   ```
-  <p>
-    <img src="docs/screenshots/desktop-editor.webp" width="32%" alt="...">
-    <img src="docs/screenshots/desktop-search.webp" width="32%" alt="...">
-    <img src="docs/screenshots/desktop-history.webp" width="32%" alt="...">
-  </p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.webp">
+    <img alt="..." src="docs/screenshots/hero-light.webp">
+  </picture>
   ```
 
-  A row apart from the main pictures, such as one under Features, looks random.
-
-- **What**: a few, about five, each a different view: the main screen, the
-  editor, search, history. A desktop and a phone, a light and a dark theme.
-  Several phone screens go side by side in one picture.
-- **Content**: notes made up for the shot that look like real use: a project
-  with a task list and a diagram, a trip, a recipe. Test fixtures look like
-  test fixtures. Keep this content out of the repository unless asked.
-- **Format**: `.webp`. Shoot at 2x or 3x and scale down, desktop to about
-  1600px wide. Round the corners, add a thin gray border and keep the
-  background transparent, so the picture sits well on both GitHub themes. The
-  whole set is a few hundred KB.
-- **Alt text** says what the picture shows: "A note with a task list and a
-  Mermaid diagram".
+- **A script makes it**: it starts the app on the sample data, takes the shots
+  with a headless browser and puts them into the frames. After a change in the
+  UI the picture is made again with one command, both themes alike. In scrawl:
+  `make readme-promo`, the script in `scripts/readme-shots/`.
+- **Format**: `.webp`. Shoot the desktop at 2x and the phone at 3x. The picture
+  is about 2400px wide and about 120KB a file.
+- **Alt text** says what the picture shows: "One note with a diagram, a chart,
+  a table and a task list, on a laptop and on a phone".
 - The pictures get a folder of their own, such as `docs/screenshots/`. If the
   project's `CLAUDE.md` lists its folders, add it there.
+
+### Badges
+
+A few badges in a row under the title, before the one line: the release, the
+license, the language, how it ships (Docker), and a platform feature the reader
+cares about (PWA). All in one style:
+
+- `style=for-the-badge` and the same dark `labelColor=18191D` on every badge.
+- A badge with a value (release, license) gets a color for the value.
+- A badge with no value is only a name on the dark color, with the logo in the
+  brand's color: `logoColor=00ADD8` for Go.
+- A badge links to what it names: the release to the latest release, the
+  license to `LICENSE`, Docker to the install section. A badge with nothing to
+  open has no link.
+
+```
+[![Release](https://img.shields.io/github/v/release/aleksey925/scrawl?style=for-the-badge&labelColor=18191D&color=2f80ed)](https://github.com/aleksey925/scrawl/releases/latest)
+[![License](https://img.shields.io/github/license/aleksey925/scrawl?style=for-the-badge&labelColor=18191D&color=464A54)](LICENSE)
+![Go](https://img.shields.io/badge/Go-18191D?style=for-the-badge&logo=go&logoColor=00ADD8)
+[![Docker](https://img.shields.io/badge/Docker-18191D?style=for-the-badge&logo=docker&logoColor=2496ED)](https://github.com/aleksey925/scrawl/#docker)
+![PWA](https://img.shields.io/badge/PWA-18191D?style=for-the-badge&logo=pwa&logoColor=A97BFF)
+```
 
 ### Lead-in before a block
 
 A sentence before a command or an example describes all of it or none of it.
-"Outside docker, give it the path to your notes folder:" above a command with
-three flags explains one flag and reads as odd. Better: "Run it with the same
-settings as the docker example, given as flags:".
-
-A block with no lead-in at all can read as part of the step before it: a
-`serve` command right after `go install` looks like a build step.
+"Give it the path to your notes folder:" above a command with five settings
+explains one of them and reads as odd. Better: "Run this in a folder of
+markdown files:", with a list under the command for the settings.
 
 ### Configuration example
 
@@ -521,7 +549,7 @@ It is not the settings reference again.
   - "headless deployment" -> "a server used only by scripts"
   - "what a request writes" -> "notes saved through the app"
 - No informal abbreviations like "smth".
-- Headings have no articles: "On server", "Running binary", "Webhook instead of
+- Headings have no articles: "On server", "From source", "Webhook instead of
   polling".
 - "such as" already means the list is not complete; do not add "or something
   else".
