@@ -62,9 +62,10 @@ One kind of knowledge per place:
 - `docs/design/` - how a part works and the rules it keeps, with the reasons.
   Kept current: a change in behavior updates its doc in the same change.
 - `docs/ui/` - how a screen looks and behaves. Kept current the same way.
-- `docs/adr/` - one decision per file, with the options turned down. An ADR is
-  not rewritten: a new decision is a new file, and the old one's status names
-  the file that replaced it.
+- `docs/adr/` - one decision per file, with the options turned down. Until an
+  ADR is merged into the main branch, it is a draft and can be rewritten or
+  deleted. Once merged, it is not rewritten: a new decision is a new file, and
+  the old one's status names the file that replaced it.
 - `docs/quirks.md` - facts about browsers, libraries, git and the OS, found by
   hitting them. A rule cites a fact in a few words, and the fact is written
   there once.

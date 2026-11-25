@@ -178,13 +178,13 @@ in the "found N candidates" message rather than after writing.
 
 One kind of knowledge per place:
 
-| Place                     | Holds                                                                                                                                           | How it changes                                                                                          |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `docs/design/<part>.md`   | how one part works and the rules it keeps, with the reasons                                                                                     | kept current: a change in behavior updates its doc in the same change                                   |
-| `docs/ui/<screen>.md`     | how a screen looks and behaves, in a project with a UI                                                                                          | kept current the same way                                                                               |
-| `docs/adr/NNNN-<slug>.md` | one decision, with the options turned down                                                                                                      | never rewritten: a new decision is a new file, and the old one's status names the file that replaced it |
-| `docs/quirks.md`          | facts about outside systems found by hitting them: browsers, libraries, git, the OS                                                             | grows; the fact is written here once, and a rule that depends on it cites it in a few words             |
-| `docs/plans/`             | plans of past and current work, and whatever comes with them (progress notes, reviews); their form is up to the tool or person that writes them | describes the code at the time it was written, not the code today                                       |
+| Place                     | Holds                                                                                                                                           | How it changes                                                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/design/<part>.md`   | how one part works and the rules it keeps, with the reasons                                                                                     | kept current: a change in behavior updates its doc in the same change                                                                                                                        |
+| `docs/ui/<screen>.md`     | how a screen looks and behaves, in a project with a UI                                                                                          | kept current the same way                                                                                                                                                                    |
+| `docs/adr/NNNN-<slug>.md` | one decision, with the options turned down                                                                                                      | a draft until merged into the main branch: rewritten or deleted freely; once merged, never rewritten: a new decision is a new file, and the old one's status names the file that replaced it |
+| `docs/quirks.md`          | facts about outside systems found by hitting them: browsers, libraries, git, the OS                                                             | grows; the fact is written here once, and a rule that depends on it cites it in a few words                                                                                                  |
+| `docs/plans/`             | plans of past and current work, and whatever comes with them (progress notes, reviews); their form is up to the tool or person that writes them | describes the code at the time it was written, not the code today                                                                                                                            |
 
 Create only the types the project has content for. A doc may name files, types
 and functions: it is read while working on that part and changes together with
@@ -428,8 +428,9 @@ One kind of knowledge per place:
 
 - `docs/design/` - how a part works and the rules it keeps, with the reasons.
   Kept current: a change in behavior updates its doc in the same change.
-- `docs/adr/` - one decision per file, with the options turned down. An ADR is
-  not rewritten: a new decision is a new file.
+- `docs/adr/` - one decision per file, with the options turned down. Until an
+  ADR is merged into the main branch, it is a draft and can be rewritten or
+  deleted. Once merged, it is not rewritten: a new decision is a new file.
 - `docs/quirks.md` - facts about browsers, libraries, git and the OS, found by
   hitting them.
 
