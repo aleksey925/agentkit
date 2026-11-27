@@ -1,8 +1,8 @@
 # kafka-tui - worked example
 
-Repo: `~/CodeProjects/kafka-tui` (mounted at `/home/box/app`). A Bubble Tea TUI
-for Kafka. This is the reference run behind the skill; everything here was
-verified end to end.
+The reference run behind the skill, verified end to end on
+[kafka-tui](https://github.com/aleksey925/kafka-tui), a Bubble Tea TUI for
+Kafka. Commands below run from a checkout of that repo.
 
 ## File resolution
 
@@ -13,9 +13,10 @@ verified end to end.
 
 `connect local` auto-connects straight to the topics list (no picker). This is
 not magically "stable" - the app still idle-quits in-container (see below); a
-busy tape is what keeps it alive. Build, copy the binary out of the host-mounted
-`dist/` (the macOS host overwrites it with a Mach-O binary mid-session, which the
-container then can't exec), and run from a neutral cwd under a throwaway HOME:
+busy tape is what keeps it alive. Build, copy the binary out of the
+host-mounted `dist/` (the macOS host overwrites it with a Mach-O binary
+mid-session, which the container then can't exec), and run from a neutral cwd
+under a throwaway HOME:
 
 ```bash
 make build && cp dist/kafka-tui /tmp/ktui-demo   # /tmp copy survives host rebuilds
@@ -30,19 +31,19 @@ Isolated `clusters.yaml` (3 clusters - shows colored dots + `[RO]` badge):
 # /tmp/demo-home/.kafka-tui/clusters.yaml
 clusters:
   - name: local
-    brokers: ['localhost:9092']
+    brokers: ["localhost:9092"]
     color: green
   - name: staging
-    brokers: ['localhost:9092']
+    brokers: ["localhost:9092"]
     color: yellow
   - name: prod
-    brokers: ['localhost:9092']
+    brokers: ["localhost:9092"]
     color: red
     read_only: true
 ```
 
-Colors: `red | yellow | green | gray | white`. In a VHS tape, launch by absolute
-path and set `HOME`/`cd` inside a `Hide ... Show` block.
+Colors: `red | yellow | green | gray | white`. In a VHS tape, launch by
+absolute path and set `HOME`/`cd` inside a `Hide ... Show` block.
 
 ## The headless idle quit (container only)
 
@@ -50,9 +51,9 @@ The app idle-quits a few seconds after its last keypress in this container: a
 config fsnotify watcher fails on the mounted FS and arms a delayed `tea.Quit`
 (logged as "config watcher snapshot channel closed; auto-reload disabled"). It
 is **not** picker-specific - `connect local` on the topics list quits on idle
-too; the picker just shows it first because you sit and look at it. It is fine on
-a real host. A *busy* tape (input every <=3s) records the full demo without ever
-hitting it; only passive idle shots suffer.
+too; the picker just shows it first because you sit and look at it. It is fine
+on a real host. A _busy_ tape (input every <=3s) records the full demo without
+ever hitting it; only passive idle shots suffer.
 
 To grab the picker as a **static PNG**, screenshot within the first couple of
 seconds (before the idle quit) at a short height. One VHS command per line:
@@ -185,16 +186,16 @@ Global: `:` command bar, `/` filter, `?` help, `ctrl+r` refresh-interval,
 `:clusters`, `:logs`, `:config sources`, `:cluster <name>`.
 
 - **Topics**: `j/k` move, `/` filter, `enter`/`m` browse messages, `c` topic
-  configs, `g` groups for topic, `i` toggle internal, `n` new, `y` clone,
-  `p` produce, `ctrl+d` delete.
+  configs, `g` groups for topic, `i` toggle internal, `n` new, `y` clone, `p`
+  produce, `ctrl+d` delete.
 - **Messages**: `enter` detail, `c` copy menu, `s` seek menu, `P` partition
   filter, `f` smart filter, `[`/`]` page, `p` produce, `R` resend.
 - **Detail**: `1` JSON, `2` raw, `3` hex, `w` wrap, `c` copy, `s` save, `n`/`p`
   next/prev message, `e` $EDITOR.
 - **Produce form**: `tab`/`shift+tab` fields, `enter` edit field (INSERT),
   `esc` leave, `s` send.
-- **Groups**: `enter` detail, `R` reset offsets, `ctrl+d` delete. Detail:
-  `tab` switch pane, `t` jump to topic messages.
+- **Groups**: `enter` detail, `R` reset offsets, `ctrl+d` delete. Detail: `tab`
+  switch pane, `t` jump to topic messages.
 
 Get the live keybindings from the `?` help screen or grep `internal/tui/`
 (`key_dispatch.go`, per-screen `*.go`).
