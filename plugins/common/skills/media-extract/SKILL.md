@@ -31,8 +31,10 @@ command lists all options.
 The script needs `bash`, plus `ffmpeg` (built with libwebp), `ffprobe` and `uv`
 on `PATH`. A system Python is not needed: `uv` downloads its own. When `mise`
 has `ffmpeg` or `uv` installed but the current folder does not enable them, the
-script takes them from `mise` itself. When `media.sh` stops and points here,
-ask the user before installing the missing tool:
+script takes them from `mise` itself. The plain `ffprobe` and `ffmpeg` commands
+in this file do not: when one fails with `No version is set for shim`, run it
+as `mise x ffmpeg -- ffprobe ...`. When `media.sh` stops and points here, ask
+the user before installing the missing tool:
 
 | Tool               | macOS                 | Debian, Ubuntu                                     |
 | ------------------ | --------------------- | -------------------------------------------------- |
@@ -155,9 +157,10 @@ it can begin a few seconds early. Drop `-c copy` when the cut must be exact.
     the real speech. For mixed speech, pass the main language: words of the
     other one come out spelled in the main alphabet, as a guess. Do not trust
     their spelling; check them against a frame.
-4.  **Key frames miss slow changes.** A slow scroll never crosses the threshold
-    between two samples. When a contact sheet shows a screen you have no key
-    frame for, grab that moment by hand with plain ffmpeg.
+4.  **Key frames miss slow and small changes.** A slow scroll, or a whiteboard
+    where a few words are added at a time, never crosses the threshold between
+    two samples. When a contact sheet shows a screen you have no key frame for,
+    grab that moment by hand with plain ffmpeg.
 5.  **A screen recording catches everything on the screen.** Mail, chats,
     terminals and other windows show up whenever the recorder ran during a
     break. Spot them on the contact sheets, skip those frames, and never copy
